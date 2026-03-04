@@ -1,0 +1,33 @@
+{
+    "name": "@page-mcp/vue3",
+    "version": "0.1.0",
+    "description": "Vue 3 adapter for Page MCP SDK — Plugin + Composables",
+    "type": "module",
+    "main": "./dist/index.cjs",
+    "module": "./dist/index.js",
+    "types": "./dist/index.d.ts",
+    "exports": {
+        ".": {
+            "types": "./dist/index.d.ts",
+            "import": "./dist/index.js",
+            "require": "./dist/index.cjs"
+        }
+    },
+    "files": [
+        "dist"
+    ],
+    "scripts": {
+        "build": "tsup",
+        "typecheck": "tsc --noEmit"
+    },
+    "peerDependencies": {
+        "vue": ">=3.2.0",
+        "@page-mcp/core": "workspace:*"
+    },
+    "devDependencies": {
+        "vue": "^3.4.0",
+        "@page-mcp/core": "workspace:*",
+        "tsup": "^8.0.0",
+        "typescript": "^5.4.0"
+    }
+}

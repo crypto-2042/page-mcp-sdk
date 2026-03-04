@@ -1,0 +1,873 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Page MCP SDK — Interactive Demo</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+    rel="stylesheet" />
+  <style>
+    :root {
+      --bg-primary: #0f0f13;
+      --bg-secondary: #16161d;
+      --bg-card: #1c1c27;
+      --bg-hover: #24243a;
+      --border: #2a2a3e;
+      --text-primary: #e4e4ed;
+      --text-secondary: #8888a4;
+      --text-muted: #5c5c7a;
+      --accent-blue: #5b8cf7;
+      --accent-cyan: #38d9d9;
+      --accent-green: #4ade80;
+      --accent-pink: #f472b6;
+      --accent-orange: #fb923c;
+      --accent-purple: #a78bfa;
+      --accent-red: #f87171;
+      --shadow: rgba(0, 0, 0, 0.4);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ---- Header ---- */
+    .header {
+      border-bottom: 1px solid var(--border);
+      padding: 16px 32px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      background: linear-gradient(180deg, #14141d, var(--bg-primary));
+    }
+
+    .header .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .header .logo-icon {
+      width: 32px;
+      height: 32px;
+      background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+      border-radius: 8px;
+      display: grid;
+      place-items: center;
+      font-size: 16px;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .header h1 {
+      font-size: 18px;
+      font-weight: 700;
+      background: linear-gradient(120deg, var(--accent-blue), var(--accent-cyan));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .header .badge {
+      font-size: 11px;
+      padding: 3px 10px;
+      background: rgba(91, 140, 247, 0.15);
+      color: var(--accent-blue);
+      border-radius: 100px;
+      font-weight: 600;
+    }
+
+    .header .status-dot {
+      margin-left: auto;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--accent-green);
+      box-shadow: 0 0 8px var(--accent-green);
+      animation: pulse 2s infinite;
+    }
+
+    .header .status-text {
+      font-size: 13px;
+      color: var(--accent-green);
+      font-weight: 500;
+    }
+
+    @keyframes pulse {
+
+      0%,
+      100% {
+        opacity: 1;
+      }
+
+      50% {
+        opacity: 0.4;
+      }
+    }
+
+    /* ---- Layout ---- */
+    .container {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0;
+      height: calc(100vh - 65px);
+    }
+
+    .panel {
+      padding: 24px;
+      overflow-y: auto;
+    }
+
+    .panel:first-child {
+      border-right: 1px solid var(--border);
+    }
+
+    .panel-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .panel-title .icon {
+      width: 28px;
+      height: 28px;
+      border-radius: 8px;
+      display: grid;
+      place-items: center;
+      font-size: 14px;
+    }
+
+    .panel-title h2 {
+      font-size: 15px;
+      font-weight: 600;
+    }
+
+    .panel-title .desc {
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+
+    /* ---- Sections ---- */
+    .section {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      margin-bottom: 16px;
+      overflow: hidden;
+    }
+
+    .section-header {
+      padding: 14px 18px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      border-bottom: 1px solid var(--border);
+      background: rgba(255, 255, 255, 0.01);
+    }
+
+    .section-header .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+    }
+
+    .section-header h3 {
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .section-header .count {
+      margin-left: auto;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 100px;
+      background: rgba(255, 255, 255, 0.06);
+      color: var(--text-secondary);
+    }
+
+    .section-body {
+      padding: 14px 18px;
+    }
+
+    /* ---- Registered Items ---- */
+    .reg-item {
+      padding: 10px 14px;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      margin-bottom: 8px;
+      transition: all 0.2s;
+    }
+
+    .reg-item:hover {
+      border-color: var(--accent-blue);
+      background: rgba(91, 140, 247, 0.04);
+    }
+
+    .reg-item .name {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--accent-cyan);
+    }
+
+    .reg-item .desc {
+      font-size: 12px;
+      color: var(--text-secondary);
+      margin-top: 4px;
+    }
+
+    .reg-item .uri {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .reg-item .steps-list {
+      display: flex;
+      gap: 6px;
+      margin-top: 6px;
+      flex-wrap: wrap;
+    }
+
+    .reg-item .step-badge {
+      font-size: 10px;
+      padding: 2px 8px;
+      background: rgba(167, 139, 250, 0.12);
+      color: var(--accent-purple);
+      border-radius: 100px;
+      font-weight: 500;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    /* ---- Buttons ---- */
+    .btn {
+      padding: 8px 18px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--bg-card);
+      color: var(--text-primary);
+      font-family: 'Inter', sans-serif;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .btn:hover {
+      border-color: var(--accent-blue);
+      background: rgba(91, 140, 247, 0.08);
+    }
+
+    .btn:active {
+      transform: scale(0.97);
+    }
+
+    .btn.primary {
+      background: linear-gradient(135deg, var(--accent-blue), #4a6fd4);
+      border-color: transparent;
+      color: #fff;
+    }
+
+    .btn.primary:hover {
+      background: linear-gradient(135deg, #6b9cff, #5b8cf7);
+    }
+
+    .btn-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 12px;
+    }
+
+    /* ---- Console ---- */
+    #console {
+      min-height: 200px;
+      max-height: 400px;
+      overflow-y: auto;
+      padding: 14px 18px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      line-height: 1.8;
+    }
+
+    .log-entry {
+      padding: 4px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+      animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(-4px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .log-time {
+      color: var(--text-muted);
+      margin-right: 8px;
+    }
+
+    .log-tag {
+      padding: 1px 6px;
+      border-radius: 4px;
+      font-size: 10px;
+      font-weight: 600;
+      margin-right: 8px;
+      display: inline-block;
+    }
+
+    .log-tag.req {
+      background: rgba(91, 140, 247, 0.15);
+      color: var(--accent-blue);
+    }
+
+    .log-tag.res {
+      background: rgba(74, 222, 128, 0.15);
+      color: var(--accent-green);
+    }
+
+    .log-tag.err {
+      background: rgba(248, 113, 113, 0.15);
+      color: var(--accent-red);
+    }
+
+    .log-tag.info {
+      background: rgba(136, 136, 164, 0.1);
+      color: var(--text-secondary);
+    }
+
+    .log-content {
+      color: var(--text-secondary);
+      word-break: break-all;
+    }
+
+    .log-content .method {
+      color: var(--accent-orange);
+      font-weight: 500;
+    }
+
+    .log-content .data {
+      color: var(--text-muted);
+    }
+
+    /* ---- Result Card ---- */
+    .result-card {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 14px;
+      margin-top: 12px;
+      animation: fadeIn 0.3s ease;
+    }
+
+    .result-card pre {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      color: var(--accent-cyan);
+      white-space: pre-wrap;
+      line-height: 1.6;
+    }
+
+    /* ---- Connect status ---- */
+    .connect-bar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 18px;
+      background: rgba(255, 255, 255, 0.02);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .connect-bar .indicator {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--text-muted);
+      transition: all 0.3s;
+    }
+
+    .connect-bar .indicator.on {
+      background: var(--accent-green);
+      box-shadow: 0 0 8px var(--accent-green);
+    }
+
+    .connect-bar span {
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="header">
+    <div class="logo">
+      <div class="logo-icon">M</div>
+      <h1>Page MCP SDK</h1>
+    </div>
+    <span class="badge">v0.1.0 MVP</span>
+    <div class="status-dot"></div>
+    <span class="status-text">Live</span>
+  </div>
+
+  <div class="container">
+    <!-- ===== Left Panel: Page Host ===== -->
+    <div class="panel">
+      <div class="panel-title">
+        <div class="icon" style="background:rgba(91,140,247,0.12)">📦</div>
+        <div>
+          <h2>Page Host</h2>
+          <div class="desc">Registered capabilities exposed to AI</div>
+        </div>
+      </div>
+
+      <!-- Tools -->
+      <div class="section">
+        <div class="section-header">
+          <div class="dot" style="background:var(--accent-cyan)"></div>
+          <h3>Tools</h3>
+          <span class="count" id="tool-count">0</span>
+        </div>
+        <div class="section-body" id="tools-list"></div>
+      </div>
+
+      <!-- Resources -->
+      <div class="section">
+        <div class="section-header">
+          <div class="dot" style="background:var(--accent-green)"></div>
+          <h3>Resources</h3>
+          <span class="count" id="resource-count">0</span>
+        </div>
+        <div class="section-body" id="resources-list"></div>
+      </div>
+
+      <!-- Skills -->
+      <div class="section">
+        <div class="section-header">
+          <div class="dot" style="background:var(--accent-purple)"></div>
+          <h3>Skills</h3>
+          <span class="count" id="skill-count">0</span>
+        </div>
+        <div class="section-body" id="skills-list"></div>
+      </div>
+    </div>
+
+    <!-- ===== Right Panel: AI Client ===== -->
+    <div class="panel">
+      <div class="panel-title">
+        <div class="icon" style="background:rgba(244,114,182,0.12)">🤖</div>
+        <div>
+          <h2>AI Client</h2>
+          <div class="desc">Discover & invoke page capabilities</div>
+        </div>
+      </div>
+
+      <!-- Connection -->
+      <div class="section">
+        <div class="connect-bar">
+          <div class="indicator" id="connect-indicator"></div>
+          <span id="connect-status">Disconnected</span>
+        </div>
+        <div class="section-body">
+          <button class="btn primary" id="btn-connect" onclick="doConnect()">⚡ Connect to Host</button>
+          <div id="host-info"></div>
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div class="section">
+        <div class="section-header">
+          <div class="dot" style="background:var(--accent-orange)"></div>
+          <h3>Actions</h3>
+        </div>
+        <div class="section-body">
+          <div class="btn-row">
+            <button class="btn" onclick="doListTools()">📋 List Tools</button>
+            <button class="btn" onclick="doCallTool()">⚡ Call addToCart</button>
+            <button class="btn" onclick="doCallGetStock()">📊 Call getStock</button>
+          </div>
+          <div class="btn-row">
+            <button class="btn" onclick="doListResources()">📋 List Resources</button>
+            <button class="btn" onclick="doReadResource()">📖 Read Cart</button>
+          </div>
+          <div class="btn-row">
+            <button class="btn" onclick="doListSkills()">📋 List Skills</button>
+            <button class="btn" onclick="doExecuteSkill()">🚀 Execute placeOrder</button>
+          </div>
+          <div id="result-area"></div>
+        </div>
+      </div>
+
+      <!-- Console -->
+      <div class="section">
+        <div class="section-header">
+          <div class="dot" style="background:var(--text-muted)"></div>
+          <h3>RPC Console</h3>
+          <button class="btn" style="margin-left:auto; padding:4px 12px; font-size:11px;"
+            onclick="clearConsole()">Clear</button>
+        </div>
+        <div id="console"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Load the built SDK -->
+  <script type="module">
+    import { PageMcpHost, PageMcpClient, EventBus, installWebMcpPolyfill, isWebMcpSupported } from '../packages/core/dist/index.js';
+
+    // ============================================================
+    // 1. Create shared bus (same JS context)
+    // ============================================================
+    const bus = new EventBus();
+
+    // ============================================================
+    // 2. Setup Host (Page Side)
+    // ============================================================
+    const host = new PageMcpHost({ name: 'demo-ecommerce', version: '1.0.0', bus });
+
+    // Simulated data store
+    const store = {
+      cart: [],
+      products: {
+        'p001': { id: 'p001', name: 'Wireless Headphones', price: 89.99, stock: 15 },
+        'p002': { id: 'p002', name: 'Mechanical Keyboard', price: 149.99, stock: 8 },
+        'p003': { id: 'p003', name: 'USB-C Hub', price: 49.99, stock: 22 },
+      },
+    };
+
+    // Register Tools (WebMCP-aligned: inputSchema + execute)
+    host.registerTool({
+      name: 'addToCart',
+      description: 'Add a product to the shopping cart',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          productId: { type: 'string', description: 'Product ID' },
+          quantity: { type: 'number', description: 'Quantity to add (default: 1)' },
+        },
+        required: ['productId'],
+      },
+      execute: async (input) => {
+        const product = store.products[input.productId];
+        if (!product) throw new Error(`Product not found: ${input.productId}`);
+        const qty = Number(input.quantity) || 1;
+        store.cart.push({ ...product, quantity: qty });
+        return { success: true, message: `Added ${qty}x ${product.name} to cart`, cartSize: store.cart.length };
+      },
+    });
+
+    host.registerTool({
+      name: 'getStock',
+      description: 'Check stock level for a product',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          productId: { type: 'string', description: 'Product ID to check' },
+        },
+        required: ['productId'],
+      },
+      annotations: { readOnlyHint: true },
+      execute: async (input) => {
+        const product = store.products[input.productId];
+        if (!product) throw new Error(`Product not found: ${input.productId}`);
+        return { productId: product.id, name: product.name, stock: product.stock };
+      },
+    });
+
+    host.registerTool({
+      name: 'calculatePrice',
+      description: 'Calculate total price for a product order',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          productId: { type: 'string' },
+          quantity: { type: 'number' },
+        },
+        required: ['productId', 'quantity'],
+      },
+      annotations: { readOnlyHint: true },
+      execute: async (input) => {
+        const product = store.products[input.productId];
+        if (!product) throw new Error(`Product not found: ${input.productId}`);
+        const total = product.price * Number(input.quantity);
+        return { productId: product.id, unitPrice: product.price, quantity: input.quantity, total };
+      },
+    });
+
+    host.registerTool({
+      name: 'submitOrder',
+      description: 'Submit a finalized order',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          productId: { type: 'string' },
+          quantity: { type: 'number' },
+          totalPrice: { type: 'number' },
+        },
+        required: ['productId', 'quantity', 'totalPrice'],
+      },
+      execute: async (input) => {
+        const orderId = 'ORD-' + Math.random().toString(36).substring(2, 8).toUpperCase();
+        return { orderId, productId: input.productId, quantity: input.quantity, totalPrice: input.totalPrice, status: 'confirmed' };
+      },
+    });
+
+    // Register Resources
+    host.registerResource({
+      uri: 'page://cart/items',
+      name: 'Cart Items',
+      description: 'Current items in the shopping cart',
+      handler: async () => ({ items: store.cart, totalItems: store.cart.length }),
+    });
+
+    host.registerResource({
+      uri: 'page://products/catalog',
+      name: 'Product Catalog',
+      description: 'Available products for purchase',
+      handler: async () => ({ products: Object.values(store.products) }),
+    });
+
+    // Register Skills
+    host.registerSkill({
+      name: 'placeOrder',
+      description: 'Full order workflow: check stock → calculate price → submit order',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          productId: { type: 'string' },
+          quantity: { type: 'number' },
+        },
+        required: ['productId', 'quantity'],
+      },
+      steps: [
+        {
+          name: 'checkStock',
+          tool: 'getStock',
+          input: (args) => ({ productId: args.productId }),
+          validate: (result, args) => result.stock >= Number(args.quantity),
+          onFail: { error: 'Insufficient stock for this order' },
+        },
+        {
+          name: 'calcPrice',
+          tool: 'calculatePrice',
+          input: (args) => ({ productId: args.productId, quantity: args.quantity }),
+        },
+        {
+          name: 'submit',
+          tool: 'submitOrder',
+          input: (args, prev) => ({
+            productId: args.productId,
+            quantity: args.quantity,
+            totalPrice: prev.calcPrice.total,
+          }),
+        },
+      ],
+    });
+
+    host.start();
+
+    // ============================================================
+    // WebMCP Polyfill Demo
+    // ============================================================
+    installWebMcpPolyfill(host);
+    console.log(`[Page MCP] WebMCP native support: ${isWebMcpSupported()}`);
+    console.log('[Page MCP] navigator.modelContext polyfill installed');
+
+    // ============================================================
+    // 3. Setup Client (AI Side)
+    // ============================================================
+    const client = new PageMcpClient({ bus });
+
+    // ============================================================
+    // 4. Wire up RPC logging
+    // ============================================================
+    bus.on('rpc:request', (data) => {
+      logToConsole('req', data.method, data.params);
+    });
+    bus.on('rpc:response', (data) => {
+      if (data.error) {
+        logToConsole('err', 'ERROR', data.error);
+      } else {
+        logToConsole('res', 'RESULT', data.result);
+      }
+    });
+
+    // ============================================================
+    // 5. Render registered items on the left panel
+    // ============================================================
+    function renderRegistered() {
+      // Tools
+      const toolsEl = document.getElementById('tools-list');
+      const tools = [
+        { name: 'addToCart', desc: 'Add a product to the shopping cart' },
+        { name: 'getStock', desc: 'Check stock level for a product' },
+        { name: 'calculatePrice', desc: 'Calculate total price for an order' },
+        { name: 'submitOrder', desc: 'Submit a finalized order' },
+      ];
+      toolsEl.innerHTML = tools.map(t => `
+      <div class="reg-item">
+        <div class="name">${t.name}()</div>
+        <div class="desc">${t.desc}</div>
+      </div>
+    `).join('');
+      document.getElementById('tool-count').textContent = tools.length;
+
+      // Resources
+      const resEl = document.getElementById('resources-list');
+      const resources = [
+        { uri: 'page://cart/items', name: 'Cart Items', desc: 'Shopping cart contents' },
+        { uri: 'page://products/catalog', name: 'Product Catalog', desc: 'Available products' },
+      ];
+      resEl.innerHTML = resources.map(r => `
+      <div class="reg-item">
+        <div class="name">${r.name}</div>
+        <div class="uri">${r.uri}</div>
+        <div class="desc">${r.desc}</div>
+      </div>
+    `).join('');
+      document.getElementById('resource-count').textContent = resources.length;
+
+      // Skills
+      const skillsEl = document.getElementById('skills-list');
+      const skills = [
+        { name: 'placeOrder', desc: 'Full order workflow: check stock → calc price → submit', steps: ['checkStock', 'calcPrice', 'submit'] },
+      ];
+      skillsEl.innerHTML = skills.map(s => `
+      <div class="reg-item">
+        <div class="name">${s.name}</div>
+        <div class="desc">${s.desc}</div>
+        <div class="steps-list">${s.steps.map(st => `<span class="step-badge">${st}</span>`).join('')}</div>
+      </div>
+    `).join('');
+      document.getElementById('skill-count').textContent = skills.length;
+    }
+    renderRegistered();
+
+    // ============================================================
+    // 6. Expose actions to buttons
+    // ============================================================
+    window.doConnect = async () => {
+      try {
+        const info = await client.connect();
+        document.getElementById('connect-indicator').classList.add('on');
+        document.getElementById('connect-status').textContent = `Connected to ${info.name} v${info.version}`;
+        document.getElementById('btn-connect').textContent = '✅ Connected';
+        document.getElementById('btn-connect').disabled = true;
+        logToConsole('info', 'Connected', info);
+      } catch (e) {
+        logToConsole('err', 'Connection failed', e.message);
+      }
+    };
+
+    window.doListTools = async () => {
+      try {
+        const tools = await client.listTools();
+        showResult('Tools', tools);
+      } catch (e) { logToConsole('err', 'Error', e.message); }
+    };
+
+    window.doCallTool = async () => {
+      try {
+        const result = await client.callTool('addToCart', { productId: 'p001', quantity: 2 });
+        showResult('addToCart Result', result);
+      } catch (e) { logToConsole('err', 'Error', e.message); }
+    };
+
+    window.doCallGetStock = async () => {
+      try {
+        const result = await client.callTool('getStock', { productId: 'p002' });
+        showResult('getStock Result', result);
+      } catch (e) { logToConsole('err', 'Error', e.message); }
+    };
+
+    window.doListResources = async () => {
+      try {
+        const resources = await client.listResources();
+        showResult('Resources', resources);
+      } catch (e) { logToConsole('err', 'Error', e.message); }
+    };
+
+    window.doReadResource = async () => {
+      try {
+        const data = await client.readResource('page://cart/items');
+        showResult('page://cart/items', data);
+      } catch (e) { logToConsole('err', 'Error', e.message); }
+    };
+
+    window.doListSkills = async () => {
+      try {
+        const skills = await client.listSkills();
+        showResult('Skills', skills);
+      } catch (e) { logToConsole('err', 'Error', e.message); }
+    };
+
+    window.doExecuteSkill = async () => {
+      try {
+        const result = await client.executeSkill('placeOrder', { productId: 'p001', quantity: 3 });
+        showResult('placeOrder Skill Result', result);
+      } catch (e) { logToConsole('err', 'Error', e.message); }
+    };
+
+    window.clearConsole = () => {
+      document.getElementById('console').innerHTML = '';
+    };
+
+    // ============================================================
+    // Helpers
+    // ============================================================
+    function logToConsole(tag, method, data) {
+      const el = document.getElementById('console');
+      const time = new Date().toLocaleTimeString('en-US', { hour12: false });
+      const entry = document.createElement('div');
+      entry.className = 'log-entry';
+      entry.innerHTML = `
+      <span class="log-time">${time}</span>
+      <span class="log-tag ${tag}">${tag.toUpperCase()}</span>
+      <span class="log-content">
+        <span class="method">${method}</span>
+        ${data ? `<span class="data"> ${JSON.stringify(data)}</span>` : ''}
+      </span>
+    `;
+      el.appendChild(entry);
+      el.scrollTop = el.scrollHeight;
+    }
+
+    function showResult(title, data) {
+      const area = document.getElementById('result-area');
+      area.innerHTML = `
+      <div class="result-card">
+        <div style="font-size:12px; color:var(--accent-orange); font-weight:600; margin-bottom:8px;">${title}</div>
+        <pre>${JSON.stringify(data, null, 2)}</pre>
+      </div>
+    `;
+    }
+  </script>
+
+</body>
+
+</html>
