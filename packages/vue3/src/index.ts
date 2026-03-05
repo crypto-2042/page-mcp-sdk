@@ -22,6 +22,7 @@ import {
     type ToolDefinition,
     type ResourceDefinition,
     type SkillDefinition,
+    type PromptDefinition,
     type HostInfo,
 } from '@page-mcp/core';
 
@@ -196,6 +197,30 @@ export function useRegisterSkill(definition: SkillDefinition): void {
     });
 }
 
+/**
+ * Register a Prompt on the Host.
+ *
+ * ```ts
+ * useRegisterPrompt({
+ *   name: 'generate-copy',
+ *   title: 'Generate Marketing Copy',
+ *   description: 'Generate marketing copy for current products',
+ *   icon: '✍️',
+ *   prompt: 'Please generate engaging marketing copy for the products on this page.',
+ * });
+ * ```
+ */
+export function useRegisterPrompt(definition: PromptDefinition): void {
+    const host = usePageMcpHost();
+    onMounted(() => {
+        try {
+            host.registerPrompt(definition);
+        } catch {
+            // Already registered
+        }
+    });
+}
+
 // ------ Re-exports ------
 
 export {
@@ -212,5 +237,7 @@ export type {
     SkillDefinition,
     SkillInfo,
     SkillResult,
+    PromptDefinition,
+    PromptInfo,
     HostInfo,
 } from '@page-mcp/core';
