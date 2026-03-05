@@ -550,5 +550,53 @@ export function generateStyles(theme: ChatTheme, accentColor: string): string {
             opacity: 0.6;
             fill: var(--mcp-accent);
         }
+
+        /* ====== Prompt Shortcut Cards ====== */
+        .mcp-prompts {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            padding: 0 16px 12px;
+            animation: mcp-msg-appear 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .mcp-prompts.hidden {
+            display: none;
+        }
+
+        .mcp-prompt-card {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 14px;
+            border-radius: 999px;
+            border: 1px solid var(--mcp-border);
+            background: var(--mcp-bg-glass);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            cursor: pointer;
+            transition: all var(--mcp-transition);
+            font-family: var(--mcp-font);
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--mcp-text-primary);
+            white-space: nowrap;
+        }
+
+        .mcp-prompt-card:hover {
+            background: var(--mcp-bg-glass-hover);
+            border-color: var(--mcp-accent);
+            box-shadow: 0 0 12px var(--mcp-accent)22;
+            transform: translateY(-1px);
+        }
+
+        .mcp-prompt-card:active {
+            transform: scale(0.96);
+        }
+
+        .mcp-prompt-icon {
+            font-size: 15px;
+            line-height: 1;
+        }
     `;
 }
