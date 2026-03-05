@@ -27,6 +27,7 @@ export class ChatWidget {
     private fab!: HTMLButtonElement;
     private panel!: HTMLDivElement;
     private messagesContainer!: HTMLDivElement;
+    private promptsContainer!: HTMLDivElement;
     private input!: HTMLInputElement;
     private sendBtn!: HTMLButtonElement;
     private loadingEl!: HTMLDivElement;
@@ -72,8 +73,10 @@ export class ChatWidget {
         // Mount to DOM
         document.body.appendChild(this.container);
 
-        // Initialize engine
-        this.engine.init();
+        // Initialize engine then render prompts
+        this.engine.init().then(() => {
+            this.renderPromptCards();
+        });
     }
 
     // ---- Build UI ----
@@ -156,6 +159,35 @@ export class ChatWidget {
         });
 
         this.shadowRoot.appendChild(this.panel);
+    }
+
+    private renderPromptCards(): void {
+        const prompts = this.engine.getPrompts();
+        if (prompts.length === 0) return;
+
+        this.promptsContainer = document.createElement('div');
+        this.promptsContainer.className = 'mcp-prompts';
+
+        for (const prompt of prompts) {
+            const card = document.createElement('button');
+            card.className = 'mcp-prompt-card';
+            card.innerHTML = `${prompt.icon ? `<span class="mcp-prompt-icon">${this.escapeHtml(prompt.icon)}</span>` : ''}${this.escapeHtml(prompt.title)}`;
+            card.setAttribute('title', prompt.description);
+            card.addEventListener('click', () => {
+                this.hidePromptCards();
+                this.engine.sendMessage(prompt.prompt);
+            });
+            this.promptsContainer.appendChild(card);
+        }
+
+        // Insert after messages container, before loading indicator
+        this.messagesContainer.parentNode!.insertBefore(this.promptsContainer, this.loadingEl);
+    }
+
+    private hidePromptCards(): void {
+        if (this.promptsContainer) {
+            this.promptsContainer.classList.add('hidden');
+        }
     }
 
     // ---- Engine Event Handlers ----
@@ -284,6 +316,7 @@ export class ChatWidget {
         const content = this.input.value.trim();
         if (!content) return;
         this.input.value = '';
+        this.hidePromptCards();
         await this.engine.sendMessage(content);
     }
 
