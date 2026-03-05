@@ -1128,6 +1128,22 @@
       prompt: 'Check my current shopping cart and give me a summary. If it is empty, suggest some products I might like.',
     });
 
+    host.registerPrompt({
+      name: 'gift-ideas',
+      title: 'Gift Ideas',
+      description: 'Recommend gift ideas',
+      icon: '🎁',
+      prompt: 'I am looking for a gift for a tech enthusiast. Can you recommend some cool gadgets from the catalog under $300?',
+    });
+
+    host.registerPrompt({
+      name: 'tech-support',
+      title: 'Tech Support',
+      description: 'Get help with a product',
+      icon: '🔧',
+      prompt: 'I need some help choosing the right product. Could you ask me a few questions to narrow down what I need?',
+    });
+
     host.start();
 
     // Client
@@ -1224,6 +1240,8 @@
         { nm: 'compare-all', ds: 'Compare all products in a table', icon: '⚖️' },
         { nm: 'deal-finder', ds: 'Find sale products', icon: '🏷️' },
         { nm: 'cart-summary', ds: 'Summarize shopping cart', icon: '🛒' },
+        { nm: 'gift-ideas', ds: 'Recommend gift ideas', icon: '🎁' },
+        { nm: 'tech-support', ds: 'Get help with a product', icon: '🔧' },
       ];
       document.getElementById('mcp-prompts').innerHTML = prompts.map(p => `<div class="mcp-item"><span class="nm">${p.icon} ${p.nm}</span><div class="ds">${p.ds}</div></div>`).join('');
       document.getElementById('mcp-prompt-cnt').textContent = prompts.length;
