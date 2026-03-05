@@ -2,6 +2,15 @@
     "name": "@page-mcp/vue2",
     "version": "0.1.0",
     "description": "Vue 2 adapter for Page MCP SDK — Plugin + Mixin",
+    "license": "MIT",
+    "keywords": [
+        "mcp",
+        "page-mcp",
+        "vue",
+        "vue2",
+        "ai",
+        "llm"
+    ],
     "type": "module",
     "main": "./dist/index.cjs",
     "module": "./dist/index.js",
@@ -14,7 +23,8 @@
         }
     },
     "files": [
-        "dist"
+        "dist",
+        "README.md"
     ],
     "scripts": {
         "build": "tsup",
@@ -22,11 +32,11 @@
     },
     "peerDependencies": {
         "vue": ">=2.6.0 <3.0.0",
-        "@page-mcp/core": "workspace:*"
+        "@page-mcp/core": ">=0.1.0"
     },
     "devDependencies": {
         "vue": "^2.7.0",
-        "@page-mcp/core": "workspace:*",
+        "@page-mcp/core": "workspace:^",
         "tsup": "^8.0.0",
         "typescript": "^5.4.0"
     }

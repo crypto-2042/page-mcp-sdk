@@ -2,872 +2,1234 @@
 <html lang="en">
 
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Page MCP SDK — Interactive Demo</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TechMart — Smart E-Commerce Demo</title>
   <link
-    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
-    rel="stylesheet" />
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap"
+    rel="stylesheet">
   <style>
     :root {
-      --bg-primary: #0f0f13;
-      --bg-secondary: #16161d;
-      --bg-card: #1c1c27;
-      --bg-hover: #24243a;
-      --border: #2a2a3e;
-      --text-primary: #e4e4ed;
-      --text-secondary: #8888a4;
-      --text-muted: #5c5c7a;
-      --accent-blue: #5b8cf7;
-      --accent-cyan: #38d9d9;
-      --accent-green: #4ade80;
-      --accent-pink: #f472b6;
-      --accent-orange: #fb923c;
-      --accent-purple: #a78bfa;
-      --accent-red: #f87171;
-      --shadow: rgba(0, 0, 0, 0.4);
+      --bg: #090912;
+      --bg2: #0f0f1a;
+      --bg3: #161625;
+      --bg4: #1e1e32;
+      --bdr: #252540;
+      --t1: #eeeef4;
+      --t2: #9494b0;
+      --t3: #5e5e7e;
+      --blue: #5b8df8;
+      --cyan: #22d3ee;
+      --green: #34d399;
+      --red: #f87171;
+      --orange: #fb923c;
+      --purple: #a78bfa;
+      --pink: #f472b6;
+      --yellow: #fbbf24;
+      --accent: #6366f1
     }
 
     * {
       margin: 0;
       padding: 0;
-      box-sizing: border-box;
+      box-sizing: border-box
     }
 
     body {
-      font-family: 'Inter', -apple-system, sans-serif;
-      background: var(--bg-primary);
-      color: var(--text-primary);
-      min-height: 100vh;
-      overflow-x: hidden;
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--t1);
+      min-height: 100vh
     }
 
-    /* ---- Header ---- */
-    .header {
-      border-bottom: 1px solid var(--border);
-      padding: 16px 32px;
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: radial-gradient(ellipse 80% 60% at 50% -20%, rgba(99, 102, 241, .12), transparent 70%);
+      z-index: -1;
+      pointer-events: none
+    }
+
+    /* === NAV === */
+    nav {
       display: flex;
       align-items: center;
       gap: 16px;
-      background: linear-gradient(180deg, #14141d, var(--bg-primary));
+      padding: 14px 28px;
+      border-bottom: 1px solid var(--bdr);
+      background: rgba(9, 9, 18, .8);
+      backdrop-filter: blur(16px);
+      position: sticky;
+      top: 0;
+      z-index: 100
     }
 
-    .header .logo {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .header .logo-icon {
-      width: 32px;
-      height: 32px;
-      background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
-      border-radius: 8px;
-      display: grid;
-      place-items: center;
-      font-size: 16px;
-      font-weight: 700;
-      color: #fff;
-    }
-
-    .header h1 {
-      font-size: 18px;
-      font-weight: 700;
-      background: linear-gradient(120deg, var(--accent-blue), var(--accent-cyan));
+    .brand {
+      font-size: 20px;
+      font-weight: 800;
+      background: linear-gradient(135deg, var(--accent), var(--cyan));
       -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
+      -webkit-text-fill-color: transparent
     }
 
-    .header .badge {
-      font-size: 11px;
-      padding: 3px 10px;
-      background: rgba(91, 140, 247, 0.15);
-      color: var(--accent-blue);
-      border-radius: 100px;
-      font-weight: 600;
-    }
-
-    .header .status-dot {
-      margin-left: auto;
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: var(--accent-green);
-      box-shadow: 0 0 8px var(--accent-green);
-      animation: pulse 2s infinite;
-    }
-
-    .header .status-text {
-      font-size: 13px;
-      color: var(--accent-green);
-      font-weight: 500;
-    }
-
-    @keyframes pulse {
-
-      0%,
-      100% {
-        opacity: 1;
-      }
-
-      50% {
-        opacity: 0.4;
-      }
-    }
-
-    /* ---- Layout ---- */
-    .container {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 0;
-      height: calc(100vh - 65px);
-    }
-
-    .panel {
-      padding: 24px;
-      overflow-y: auto;
-    }
-
-    .panel:first-child {
-      border-right: 1px solid var(--border);
-    }
-
-    .panel-title {
+    .nav-links {
       display: flex;
-      align-items: center;
-      gap: 10px;
-      margin-bottom: 20px;
+      gap: 20px;
+      list-style: none;
+      margin-left: 32px
     }
 
-    .panel-title .icon {
-      width: 28px;
-      height: 28px;
-      border-radius: 8px;
-      display: grid;
-      place-items: center;
-      font-size: 14px;
-    }
-
-    .panel-title h2 {
-      font-size: 15px;
-      font-weight: 600;
-    }
-
-    .panel-title .desc {
-      font-size: 12px;
-      color: var(--text-secondary);
-    }
-
-    /* ---- Sections ---- */
-    .section {
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      margin-bottom: 16px;
-      overflow: hidden;
-    }
-
-    .section-header {
-      padding: 14px 18px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      border-bottom: 1px solid var(--border);
-      background: rgba(255, 255, 255, 0.01);
-    }
-
-    .section-header .dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-    }
-
-    .section-header h3 {
-      font-size: 13px;
-      font-weight: 600;
-    }
-
-    .section-header .count {
-      margin-left: auto;
-      font-size: 11px;
-      font-weight: 600;
-      padding: 2px 8px;
-      border-radius: 100px;
-      background: rgba(255, 255, 255, 0.06);
-      color: var(--text-secondary);
-    }
-
-    .section-body {
-      padding: 14px 18px;
-    }
-
-    /* ---- Registered Items ---- */
-    .reg-item {
-      padding: 10px 14px;
-      background: rgba(255, 255, 255, 0.02);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      margin-bottom: 8px;
-      transition: all 0.2s;
-    }
-
-    .reg-item:hover {
-      border-color: var(--accent-blue);
-      background: rgba(91, 140, 247, 0.04);
-    }
-
-    .reg-item .name {
-      font-family: 'JetBrains Mono', monospace;
+    .nav-links a {
+      color: var(--t2);
+      text-decoration: none;
       font-size: 13px;
       font-weight: 500;
-      color: var(--accent-cyan);
+      transition: .2s
     }
 
-    .reg-item .desc {
-      font-size: 12px;
-      color: var(--text-secondary);
-      margin-top: 4px;
+    .nav-links a:hover,
+    .nav-links a.act {
+      color: var(--t1)
     }
 
-    .reg-item .uri {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 11px;
-      color: var(--text-muted);
-      margin-top: 2px;
+    .nav-sp {
+      flex: 1
     }
 
-    .reg-item .steps-list {
-      display: flex;
-      gap: 6px;
-      margin-top: 6px;
-      flex-wrap: wrap;
-    }
-
-    .reg-item .step-badge {
-      font-size: 10px;
-      padding: 2px 8px;
-      background: rgba(167, 139, 250, 0.12);
-      color: var(--accent-purple);
-      border-radius: 100px;
-      font-weight: 500;
-      font-family: 'JetBrains Mono', monospace;
-    }
-
-    /* ---- Buttons ---- */
-    .btn {
-      padding: 8px 18px;
+    .nav-btn {
+      padding: 6px 14px;
       border-radius: 8px;
-      border: 1px solid var(--border);
-      background: var(--bg-card);
-      color: var(--text-primary);
-      font-family: 'Inter', sans-serif;
-      font-size: 13px;
-      font-weight: 500;
+      border: 1px solid var(--bdr);
+      background: var(--bg3);
+      color: var(--t2);
+      font: 500 11px 'Inter', sans-serif;
       cursor: pointer;
-      transition: all 0.2s;
+      transition: .2s;
       display: inline-flex;
       align-items: center;
-      gap: 6px;
+      gap: 5px
     }
 
-    .btn:hover {
-      border-color: var(--accent-blue);
-      background: rgba(91, 140, 247, 0.08);
+    .nav-btn:hover {
+      border-color: var(--accent);
+      color: var(--t1);
+      background: rgba(99, 102, 241, .08)
     }
 
-    .btn:active {
-      transform: scale(0.97);
-    }
-
-    .btn.primary {
-      background: linear-gradient(135deg, var(--accent-blue), #4a6fd4);
-      border-color: transparent;
+    .cart-badge {
+      background: var(--accent);
       color: #fff;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 1px 6px;
+      border-radius: 99px;
+      margin-left: 2px
     }
 
-    .btn.primary:hover {
-      background: linear-gradient(135deg, #6b9cff, #5b8cf7);
+    /* === HERO === */
+    .hero {
+      text-align: center;
+      padding: 56px 24px 40px
     }
 
-    .btn-row {
+    .hero h1 {
+      font-size: 42px;
+      font-weight: 800;
+      letter-spacing: -.03em;
+      margin-bottom: 10px;
+      background: linear-gradient(135deg, #fff 30%, var(--accent));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent
+    }
+
+    .hero p {
+      font-size: 16px;
+      color: var(--t2);
+      max-width: 500px;
+      margin: 0 auto;
+      line-height: 1.6
+    }
+
+    /* === PRODUCT GRID === */
+    .products {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 24px 40px;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 20px
+    }
+
+    .product {
+      background: var(--bg3);
+      border: 1px solid var(--bdr);
+      border-radius: 16px;
+      overflow: hidden;
+      transition: .3s;
+      position: relative
+    }
+
+    .product:hover {
+      transform: translateY(-4px);
+      border-color: rgba(99, 102, 241, .3);
+      box-shadow: 0 12px 40px rgba(0, 0, 0, .4)
+    }
+
+    .product-img {
+      height: 180px;
+      background: var(--bg2);
       display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-      margin-top: 12px;
+      align-items: center;
+      justify-content: center;
+      font-size: 64px;
+      position: relative
     }
 
-    /* ---- Console ---- */
-    #console {
-      min-height: 200px;
-      max-height: 400px;
-      overflow-y: auto;
-      padding: 14px 18px;
-      font-family: 'JetBrains Mono', monospace;
+    .product-img .stock-tag {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      font-size: 10px;
+      font-weight: 600;
+      padding: 3px 8px;
+      border-radius: 6px;
+      background: rgba(52, 211, 153, .12);
+      color: var(--green)
+    }
+
+    .product-img .stock-tag.low {
+      background: rgba(251, 146, 60, .12);
+      color: var(--orange)
+    }
+
+    .product-info {
+      padding: 16px
+    }
+
+    .product-cat {
+      font-size: 10px;
+      color: var(--accent);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+      margin-bottom: 4px
+    }
+
+    .product-name {
+      font-size: 15px;
+      font-weight: 600;
+      margin-bottom: 6px
+    }
+
+    .product-desc {
       font-size: 12px;
-      line-height: 1.8;
+      color: var(--t2);
+      line-height: 1.5;
+      margin-bottom: 12px;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden
     }
 
-    .log-entry {
-      padding: 4px 0;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.03);
-      animation: fadeIn 0.3s ease;
+    .product-bottom {
+      display: flex;
+      align-items: center;
+      justify-content: space-between
+    }
+
+    .product-price {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--t1)
+    }
+
+    .product-price .old {
+      font-size: 13px;
+      color: var(--t3);
+      text-decoration: line-through;
+      margin-left: 6px;
+      font-weight: 400
+    }
+
+    .add-btn {
+      padding: 8px 16px;
+      border-radius: 10px;
+      border: none;
+      background: var(--accent);
+      color: #fff;
+      font: 600 12px 'Inter', sans-serif;
+      cursor: pointer;
+      transition: .2s
+    }
+
+    .add-btn:hover {
+      background: #818cf8;
+      transform: scale(1.05)
+    }
+
+    .add-btn:active {
+      transform: scale(.95)
+    }
+
+    .add-btn.in-cart {
+      background: var(--bg4);
+      border: 1px solid var(--green);
+      color: var(--green)
+    }
+
+    /* === CART DRAWER === */
+    .cart-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, .5);
+      z-index: 200
+    }
+
+    .cart-overlay.open {
+      display: block
+    }
+
+    .cart-drawer {
+      position: fixed;
+      top: 0;
+      right: -420px;
+      width: 400px;
+      max-width: 90vw;
+      height: 100vh;
+      background: var(--bg2);
+      border-left: 1px solid var(--bdr);
+      z-index: 201;
+      transition: right .3s;
+      display: flex;
+      flex-direction: column
+    }
+
+    .cart-drawer.open {
+      right: 0
+    }
+
+    .cart-hd {
+      padding: 20px;
+      border-bottom: 1px solid var(--bdr);
+      display: flex;
+      align-items: center;
+      justify-content: space-between
+    }
+
+    .cart-hd h2 {
+      font-size: 18px;
+      font-weight: 700
+    }
+
+    .cart-close {
+      background: none;
+      border: none;
+      color: var(--t2);
+      font-size: 20px;
+      cursor: pointer
+    }
+
+    .cart-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px
+    }
+
+    .cart-empty {
+      text-align: center;
+      padding: 40px 0;
+      color: var(--t3);
+      font-size: 13px
+    }
+
+    .cart-item {
+      display: flex;
+      gap: 12px;
+      padding: 12px;
+      background: var(--bg3);
+      border: 1px solid var(--bdr);
+      border-radius: 12px;
+      margin-bottom: 10px
+    }
+
+    .cart-item-img {
+      width: 48px;
+      height: 48px;
+      border-radius: 8px;
+      background: var(--bg4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      flex-shrink: 0
+    }
+
+    .cart-item-info {
+      flex: 1;
+      min-width: 0
+    }
+
+    .cart-item-name {
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 2px
+    }
+
+    .cart-item-price {
+      font-size: 12px;
+      color: var(--t2)
+    }
+
+    .cart-item-qty {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 6px
+    }
+
+    .qty-btn {
+      width: 24px;
+      height: 24px;
+      border-radius: 6px;
+      border: 1px solid var(--bdr);
+      background: var(--bg4);
+      color: var(--t1);
+      font-size: 14px;
+      cursor: pointer;
+      display: grid;
+      place-items: center
+    }
+
+    .qty-btn:hover {
+      border-color: var(--accent)
+    }
+
+    .cart-item-qty span {
+      font-size: 13px;
+      font-weight: 600;
+      min-width: 20px;
+      text-align: center
+    }
+
+    .cart-item-rm {
+      background: none;
+      border: none;
+      color: var(--t3);
+      font-size: 14px;
+      cursor: pointer;
+      align-self: flex-start;
+      margin-left: 4px
+    }
+
+    .cart-item-rm:hover {
+      color: var(--red)
+    }
+
+    .cart-footer {
+      padding: 16px 20px;
+      border-top: 1px solid var(--bdr)
+    }
+
+    .cart-total {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 12px;
+      font-size: 15px;
+      font-weight: 600
+    }
+
+    .checkout-btn {
+      width: 100%;
+      padding: 12px;
+      border-radius: 12px;
+      border: none;
+      background: linear-gradient(135deg, var(--accent), #818cf8);
+      color: #fff;
+      font: 700 14px 'Inter', sans-serif;
+      cursor: pointer;
+      transition: .2s
+    }
+
+    .checkout-btn:hover {
+      box-shadow: 0 4px 24px rgba(99, 102, 241, .4)
+    }
+
+    .checkout-btn:disabled {
+      opacity: .5;
+      cursor: not-allowed
+    }
+
+    /* === ORDER HISTORY === */
+    .orders-section {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 24px 60px
+    }
+
+    .sec-hd {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 16px
+    }
+
+    .sec-hd h2 {
+      font-size: 20px;
+      font-weight: 700
+    }
+
+    .order-card {
+      background: var(--bg3);
+      border: 1px solid var(--bdr);
+      border-radius: 14px;
+      padding: 16px;
+      margin-bottom: 10px;
+      animation: fadeIn .3s
+    }
+
+    .order-hd {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px
+    }
+
+    .order-id {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--accent)
+    }
+
+    .order-status {
+      font-size: 10px;
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-weight: 600
+    }
+
+    .order-status.confirmed {
+      background: rgba(52, 211, 153, .12);
+      color: var(--green)
+    }
+
+    .order-status.failed {
+      background: rgba(248, 113, 113, .12);
+      color: var(--red)
+    }
+
+    .order-items {
+      font-size: 12px;
+      color: var(--t2);
+      margin-bottom: 4px
+    }
+
+    .order-total {
+      font-size: 14px;
+      font-weight: 600
     }
 
     @keyframes fadeIn {
       from {
         opacity: 0;
-        transform: translateY(-4px);
+        transform: translateY(-6px)
       }
 
       to {
         opacity: 1;
-        transform: translateY(0);
+        transform: translateY(0)
       }
     }
 
-    .log-time {
-      color: var(--text-muted);
-      margin-right: 8px;
+    /* === TOAST === */
+    .toast-container {
+      position: fixed;
+      top: 70px;
+      right: 20px;
+      z-index: 300;
+      display: flex;
+      flex-direction: column;
+      gap: 8px
     }
 
-    .log-tag {
-      padding: 1px 6px;
-      border-radius: 4px;
-      font-size: 10px;
-      font-weight: 600;
-      margin-right: 8px;
-      display: inline-block;
-    }
-
-    .log-tag.req {
-      background: rgba(91, 140, 247, 0.15);
-      color: var(--accent-blue);
-    }
-
-    .log-tag.res {
-      background: rgba(74, 222, 128, 0.15);
-      color: var(--accent-green);
-    }
-
-    .log-tag.err {
-      background: rgba(248, 113, 113, 0.15);
-      color: var(--accent-red);
-    }
-
-    .log-tag.info {
-      background: rgba(136, 136, 164, 0.1);
-      color: var(--text-secondary);
-    }
-
-    .log-content {
-      color: var(--text-secondary);
-      word-break: break-all;
-    }
-
-    .log-content .method {
-      color: var(--accent-orange);
+    .toast {
+      padding: 12px 18px;
+      border-radius: 10px;
+      font-size: 13px;
       font-weight: 500;
-    }
-
-    .log-content .data {
-      color: var(--text-muted);
-    }
-
-    /* ---- Result Card ---- */
-    .result-card {
-      background: rgba(255, 255, 255, 0.02);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 14px;
-      margin-top: 12px;
-      animation: fadeIn 0.3s ease;
-    }
-
-    .result-card pre {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 12px;
-      color: var(--accent-cyan);
-      white-space: pre-wrap;
-      line-height: 1.6;
-    }
-
-    /* ---- Connect status ---- */
-    .connect-bar {
       display: flex;
       align-items: center;
-      gap: 10px;
-      padding: 12px 18px;
-      background: rgba(255, 255, 255, 0.02);
-      border-bottom: 1px solid var(--border);
+      gap: 8px;
+      animation: slideIn .3s;
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--bdr);
+      min-width: 240px
     }
 
-    .connect-bar .indicator {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: var(--text-muted);
-      transition: all 0.3s;
+    .toast.success {
+      background: rgba(52, 211, 153, .12);
+      color: var(--green);
+      border-color: rgba(52, 211, 153, .2)
     }
 
-    .connect-bar .indicator.on {
-      background: var(--accent-green);
-      box-shadow: 0 0 8px var(--accent-green);
+    .toast.error {
+      background: rgba(248, 113, 113, .12);
+      color: var(--red);
+      border-color: rgba(248, 113, 113, .2)
     }
 
-    .connect-bar span {
+    .toast.info {
+      background: rgba(99, 102, 241, .12);
+      color: var(--blue);
+      border-color: rgba(99, 102, 241, .2)
+    }
+
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateX(40px)
+      }
+
+      to {
+        opacity: 1;
+        transform: translateX(0)
+      }
+    }
+
+    /* === MODAL === */
+    .modal-bg {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, .6);
+      backdrop-filter: blur(6px);
+      z-index: 500;
+      place-items: center
+    }
+
+    .modal-bg.open {
+      display: grid
+    }
+
+    .modal {
+      background: var(--bg2);
+      border: 1px solid var(--bdr);
+      border-radius: 16px;
+      padding: 24px;
+      width: 700px;
+      max-width: 94vw;
+      max-height: 88vh;
+      overflow-y: auto;
+      box-shadow: 0 16px 64px rgba(0, 0, 0, .5)
+    }
+
+    .modal h2 {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 4px
+    }
+
+    .modal .sub {
       font-size: 12px;
-      color: var(--text-secondary);
+      color: var(--t2);
+      margin-bottom: 16px
+    }
+
+    .modal-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px
+    }
+
+    .field label {
+      display: block;
+      font-size: 10px;
+      color: var(--t2);
+      text-transform: uppercase;
+      letter-spacing: .04em;
+      margin-bottom: 4px;
+      font-weight: 600
+    }
+
+    .field input,
+    .field select {
+      width: 100%;
+      padding: 8px 10px;
+      border-radius: 8px;
+      border: 1px solid var(--bdr);
+      background: var(--bg);
+      color: var(--t1);
+      font: 13px 'Inter', sans-serif;
+      outline: none
+    }
+
+    .field input:focus,
+    .field select:focus {
+      border-color: var(--accent)
+    }
+
+    .field input[type=color] {
+      height: 34px;
+      cursor: pointer
+    }
+
+    .modal-foot {
+      display: flex;
+      gap: 8px;
+      margin-top: 16px;
+      justify-content: flex-end
+    }
+
+    .mbtn {
+      padding: 7px 16px;
+      border-radius: 8px;
+      border: 1px solid var(--bdr);
+      background: var(--bg3);
+      color: var(--t1);
+      font: 500 12px 'Inter', sans-serif;
+      cursor: pointer;
+      transition: .2s
+    }
+
+    .mbtn:hover {
+      border-color: var(--accent)
+    }
+
+    .mbtn.pri {
+      background: var(--accent);
+      border-color: transparent;
+      color: #fff
+    }
+
+    /* MCP Debug Modal */
+    .mcp-section {
+      margin-bottom: 14px
+    }
+
+    .mcp-section h3 {
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: var(--t2);
+      display: flex;
+      align-items: center;
+      gap: 6px
+    }
+
+    .mcp-item {
+      padding: 8px 10px;
+      background: rgba(255, 255, 255, .02);
+      border: 1px solid var(--bdr);
+      border-radius: 8px;
+      margin-bottom: 6px;
+      font-size: 11px
+    }
+
+    .mcp-item .nm {
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--cyan);
+      font-weight: 500
+    }
+
+    .mcp-item .ds {
+      color: var(--t2);
+      margin-top: 2px
+    }
+
+    .mcp-item .tag {
+      font-size: 9px;
+      padding: 1px 5px;
+      border-radius: 99px;
+      font-weight: 600;
+      margin-left: 4px
+    }
+
+    .tag-r {
+      background: rgba(52, 211, 153, .1);
+      color: var(--green)
+    }
+
+    .tag-w {
+      background: rgba(251, 146, 60, .1);
+      color: var(--orange)
+    }
+
+    .tag-x {
+      background: rgba(244, 114, 182, .1);
+      color: var(--pink)
+    }
+
+    .console-box {
+      max-height: 200px;
+      overflow-y: auto;
+      padding: 8px;
+      background: var(--bg);
+      border-radius: 8px;
+      border: 1px solid var(--bdr);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      line-height: 1.6
+    }
+
+    .clog {
+      border-bottom: 1px solid rgba(255, 255, 255, .02);
+      padding: 2px 0
+    }
+
+    .clog .ct {
+      color: var(--t3);
+      margin-right: 4px
+    }
+
+    .clog .ck {
+      padding: 1px 4px;
+      border-radius: 3px;
+      font-size: 9px;
+      font-weight: 600;
+      margin-right: 4px
+    }
+
+    .ck-req {
+      background: rgba(91, 140, 247, .1);
+      color: var(--blue)
+    }
+
+    .ck-res {
+      background: rgba(52, 211, 153, .1);
+      color: var(--green)
+    }
+
+    .ck-err {
+      background: rgba(248, 113, 113, .1);
+      color: var(--red)
+    }
+
+    .ck-info {
+      background: rgba(148, 148, 176, .08);
+      color: var(--t2)
+    }
+
+    .clog .cm {
+      color: var(--orange)
+    }
+
+    .clog .cd {
+      color: var(--t3)
+    }
+
+    /* Footer */
+    footer {
+      text-align: center;
+      padding: 24px;
+      color: var(--t3);
+      font-size: 12px;
+      border-top: 1px solid var(--bdr)
+    }
+
+    @media(max-width:640px) {
+      .hero h1 {
+        font-size: 28px
+      }
+
+      .products {
+        grid-template-columns: 1fr
+      }
+
+      .modal-grid {
+        grid-template-columns: 1fr
+      }
+
+      .nav-links {
+        display: none
+      }
     }
   </style>
 </head>
 
 <body>
 
-  <div class="header">
-    <div class="logo">
-      <div class="logo-icon">M</div>
-      <h1>Page MCP SDK</h1>
+  <nav>
+    <div class="brand">🛍️ TechMart</div>
+    <ul class="nav-links">
+      <li><a href="#products" class="act">Products</a></li>
+      <li><a href="#orders">Orders</a></li>
+    </ul>
+    <div class="nav-sp"></div>
+    <button class="nav-btn" onclick="openMcpDebug()">🔧 MCP Debug</button>
+    <button class="nav-btn" onclick="openSettings()">⚙️ AI Settings</button>
+    <button class="nav-btn" onclick="openCart()">🛒 Cart <span class="cart-badge" id="cart-badge">0</span></button>
+  </nav>
+
+  <section class="hero">
+    <h1>Smart Shopping, Powered by AI</h1>
+    <p>Browse products with AI-powered MCP tools. The AI assistant knows your cart, stock levels and can place orders
+      for you.</p>
+  </section>
+
+  <div class="products" id="products"></div>
+
+  <div class="orders-section" id="orders">
+    <div class="sec-hd">
+      <h2>📦 Order History</h2>
     </div>
-    <span class="badge">v0.1.0 MVP</span>
-    <div class="status-dot"></div>
-    <span class="status-text">Live</span>
-  </div>
-
-  <div class="container">
-    <!-- ===== Left Panel: Page Host ===== -->
-    <div class="panel">
-      <div class="panel-title">
-        <div class="icon" style="background:rgba(91,140,247,0.12)">📦</div>
-        <div>
-          <h2>Page Host</h2>
-          <div class="desc">Registered capabilities exposed to AI</div>
-        </div>
-      </div>
-
-      <!-- Tools -->
-      <div class="section">
-        <div class="section-header">
-          <div class="dot" style="background:var(--accent-cyan)"></div>
-          <h3>Tools</h3>
-          <span class="count" id="tool-count">0</span>
-        </div>
-        <div class="section-body" id="tools-list"></div>
-      </div>
-
-      <!-- Resources -->
-      <div class="section">
-        <div class="section-header">
-          <div class="dot" style="background:var(--accent-green)"></div>
-          <h3>Resources</h3>
-          <span class="count" id="resource-count">0</span>
-        </div>
-        <div class="section-body" id="resources-list"></div>
-      </div>
-
-      <!-- Skills -->
-      <div class="section">
-        <div class="section-header">
-          <div class="dot" style="background:var(--accent-purple)"></div>
-          <h3>Skills</h3>
-          <span class="count" id="skill-count">0</span>
-        </div>
-        <div class="section-body" id="skills-list"></div>
-      </div>
-    </div>
-
-    <!-- ===== Right Panel: AI Client ===== -->
-    <div class="panel">
-      <div class="panel-title">
-        <div class="icon" style="background:rgba(244,114,182,0.12)">🤖</div>
-        <div>
-          <h2>AI Client</h2>
-          <div class="desc">Discover & invoke page capabilities</div>
-        </div>
-      </div>
-
-      <!-- Connection -->
-      <div class="section">
-        <div class="connect-bar">
-          <div class="indicator" id="connect-indicator"></div>
-          <span id="connect-status">Disconnected</span>
-        </div>
-        <div class="section-body">
-          <button class="btn primary" id="btn-connect" onclick="doConnect()">⚡ Connect to Host</button>
-          <div id="host-info"></div>
-        </div>
-      </div>
-
-      <!-- Actions -->
-      <div class="section">
-        <div class="section-header">
-          <div class="dot" style="background:var(--accent-orange)"></div>
-          <h3>Actions</h3>
-        </div>
-        <div class="section-body">
-          <div class="btn-row">
-            <button class="btn" onclick="doListTools()">📋 List Tools</button>
-            <button class="btn" onclick="doCallTool()">⚡ Call addToCart</button>
-            <button class="btn" onclick="doCallGetStock()">📊 Call getStock</button>
-          </div>
-          <div class="btn-row">
-            <button class="btn" onclick="doListResources()">📋 List Resources</button>
-            <button class="btn" onclick="doReadResource()">📖 Read Cart</button>
-          </div>
-          <div class="btn-row">
-            <button class="btn" onclick="doListSkills()">📋 List Skills</button>
-            <button class="btn" onclick="doExecuteSkill()">🚀 Execute placeOrder</button>
-          </div>
-          <div id="result-area"></div>
-        </div>
-      </div>
-
-      <!-- Console -->
-      <div class="section">
-        <div class="section-header">
-          <div class="dot" style="background:var(--text-muted)"></div>
-          <h3>RPC Console</h3>
-          <button class="btn" style="margin-left:auto; padding:4px 12px; font-size:11px;"
-            onclick="clearConsole()">Clear</button>
-        </div>
-        <div id="console"></div>
+    <div id="order-list">
+      <div style="color:var(--t3);font-size:13px">No orders yet. Add items and checkout, or ask AI to place an order!
       </div>
     </div>
   </div>
 
-  <!-- Load the built SDK -->
-  <script type="module">
-    import { PageMcpHost, PageMcpClient, EventBus, installWebMcpPolyfill, isWebMcpSupported } from '../packages/core/dist/index.js';
+  <!-- Cart Drawer -->
+  <div class="cart-overlay" id="cart-overlay" onclick="closeCart()"></div>
+  <div class="cart-drawer" id="cart-drawer">
+    <div class="cart-hd">
+      <h2>🛒 Shopping Cart</h2><button class="cart-close" onclick="closeCart()">✕</button>
+    </div>
+    <div class="cart-body" id="cart-body">
+      <div class="cart-empty">Your cart is empty</div>
+    </div>
+    <div class="cart-footer">
+      <div class="cart-total"><span>Total</span><span id="cart-total">$0.00</span></div>
+      <button class="checkout-btn" id="checkout-btn" onclick="doCheckout()" disabled>🚀 Place Order (Skill
+        Execution)</button>
+    </div>
+  </div>
 
-    // ============================================================
-    // 1. Create shared bus (same JS context)
-    // ============================================================
-    const bus = new EventBus();
+  <!-- Toast container -->
+  <div class="toast-container" id="toasts"></div>
 
-    // ============================================================
-    // 2. Setup Host (Page Side)
-    // ============================================================
-    const host = new PageMcpHost({ name: 'demo-ecommerce', version: '1.0.0', bus });
+  <!-- AI Settings Modal -->
+  <div class="modal-bg" id="settings-modal" onclick="if(event.target===this)closeSettings()">
+    <div class="modal">
+      <h2>⚙️ AI Chat Widget Settings</h2>
+      <div class="sub">Configure the embedded AI assistant. Changes apply on save.</div>
+      <div class="modal-grid">
+        <div class="field"><label>API Key</label><input type="password" id="cfg-apikey" placeholder="sk-..."></div>
+        <div class="field"><label>Base URL</label><input type="text" id="cfg-baseurl"
+            placeholder="https://api.openai.com/v1"></div>
+        <div class="field"><label>Model</label><input type="text" id="cfg-model" value="gpt-4o" placeholder="gpt-4o">
+        </div>
+        <div class="field"><label>Title</label><input type="text" id="cfg-title" value="TechMart Assistant"></div>
+        <div class="field"><label>Position</label><select id="cfg-position">
+            <option value="bottom-right" selected>Bottom Right</option>
+            <option value="bottom-left">Bottom Left</option>
+          </select></div>
+        <div class="field"><label>Theme</label><select id="cfg-theme">
+            <option value="dark" selected>Dark</option>
+            <option value="light">Light</option>
+            <option value="auto">Auto</option>
+          </select></div>
+        <div class="field"><label>Accent Color</label><input type="color" id="cfg-color" value="#6366f1"></div>
+      </div>
+      <div class="modal-foot"><button class="mbtn" onclick="closeSettings()">Cancel</button><button class="mbtn pri"
+          onclick="applySettings()">💾 Save & Apply</button></div>
+    </div>
+  </div>
 
-    // Simulated data store
+  <!-- MCP Debug Modal -->
+  <div class="modal-bg" id="mcp-modal" onclick="if(event.target===this)closeMcpDebug()">
+    <div class="modal" style="width:800px">
+      <h2>🔧 MCP Debug Console</h2>
+      <div class="sub">Registered tools, resources, skills and RPC traffic</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+        <div>
+          <div class="mcp-section">
+            <h3>🔨 Tools <span class="cart-badge" id="mcp-tool-cnt" style="background:var(--cyan)">0</span></h3>
+            <div id="mcp-tools"></div>
+          </div>
+          <div class="mcp-section">
+            <h3>📂 Resources <span class="cart-badge" id="mcp-res-cnt" style="background:var(--green)">0</span></h3>
+            <div id="mcp-resources"></div>
+          </div>
+          <div class="mcp-section">
+            <h3>🚀 Skills <span class="cart-badge" id="mcp-skill-cnt" style="background:var(--purple)">0</span></h3>
+            <div id="mcp-skills"></div>
+          </div>
+        </div>
+        <div>
+          <div class="mcp-section">
+            <h3>📟 RPC Console <button class="mbtn" style="margin-left:auto;padding:2px 8px;font-size:10px"
+                onclick="document.getElementById('rpc-console').innerHTML=''">Clear</button></h3>
+            <div class="console-box" id="rpc-console"></div>
+          </div>
+          <div class="mcp-section">
+            <h3>⚡ Quick Test</h3>
+            <div style="display:flex;flex-wrap:wrap;gap:4px">
+              <button class="mbtn" onclick="qTest('listTools')">List Tools</button>
+              <button class="mbtn" onclick="qTest('listResources')">List Resources</button>
+              <button class="mbtn" onclick="qTest('listSkills')">List Skills</button>
+              <button class="mbtn" onclick="qTest('readCart')">Read Cart</button>
+              <button class="mbtn" onclick="qTest('readCatalog')">Read Catalog</button>
+            </div>
+            <div id="mcp-result" style="margin-top:8px"></div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-foot"><button class="mbtn" onclick="closeMcpDebug()">Close</button></div>
+    </div>
+  </div>
+
+  <footer>TechMart Demo — Powered by Page MCP SDK · AI Chat Widget</footer>
+
+  <script src="../packages/core/dist/index.global.js"></script>
+  <script src="../packages/chat/dist/index.global.js"></script>
+  <script>
+    // ============================================================
+    // DATA STORE
+    // ============================================================
     const store = {
-      cart: [],
-      products: {
-        'p001': { id: 'p001', name: 'Wireless Headphones', price: 89.99, stock: 15 },
-        'p002': { id: 'p002', name: 'Mechanical Keyboard', price: 149.99, stock: 8 },
-        'p003': { id: 'p003', name: 'USB-C Hub', price: 49.99, stock: 22 },
-      },
+      products: [
+        { id: 'p001', name: 'Wireless Headphones', category: 'Audio', price: 89.99, originalPrice: 129.99, stock: 15, emoji: '🎧', desc: 'Premium noise-cancelling Bluetooth headphones with 30h battery.' },
+        { id: 'p002', name: 'Mechanical Keyboard', category: 'Peripherals', price: 149.99, originalPrice: null, stock: 8, emoji: '⌨️', desc: 'Cherry MX Brown switches, RGB backlit, hot-swappable.' },
+        { id: 'p003', name: 'USB-C Hub 7-in-1', category: 'Accessories', price: 49.99, originalPrice: 69.99, stock: 22, emoji: '🔌', desc: 'HDMI 4K, USB 3.0 x3, SD/TF reader, PD 100W charging.' },
+        { id: 'p004', name: '4K Webcam Pro', category: 'Video', price: 119.99, originalPrice: null, stock: 5, emoji: '📷', desc: 'Ultra HD webcam with auto-focus, noise-cancelling mic.' },
+        { id: 'p005', name: 'Portable SSD 1TB', category: 'Storage', price: 79.99, originalPrice: 99.99, stock: 30, emoji: '💾', desc: 'NVMe, USB 3.2, 1050MB/s read, shock-resistant design.' },
+        { id: 'p006', name: 'Smart LED Desk Lamp', category: 'Lighting', price: 39.99, originalPrice: null, stock: 0, emoji: '💡', desc: 'Touch dimming, 5 color temps, USB charging port, eye-care.' },
+      ],
+      cart: [],      // { productName, quantity }
+      orders: [],
+      notifications: [],
     };
 
-    // Register Tools (WebMCP-aligned: inputSchema + execute)
+    function findProduct(nameOrId) {
+      const q = String(nameOrId).toLowerCase();
+      return store.products.find(p => p.id === nameOrId || p.name.toLowerCase() === q || p.name.toLowerCase().includes(q));
+    }
+
+    // ============================================================
+    // MCP SETUP
+    // ============================================================
+    const bus = new PageMcpCore.EventBus();
+    const host = new PageMcpCore.PageMcpHost({ name: 'techmart', version: '1.0.0', bus });
+
+    // ---- READ Tools ----
     host.registerTool({
-      name: 'addToCart',
-      description: 'Add a product to the shopping cart',
-      inputSchema: {
-        type: 'object',
-        properties: {
-          productId: { type: 'string', description: 'Product ID' },
-          quantity: { type: 'number', description: 'Quantity to add (default: 1)' },
-        },
-        required: ['productId'],
-      },
-      execute: async (input) => {
-        const product = store.products[input.productId];
-        if (!product) throw new Error(`Product not found: ${input.productId}`);
-        const qty = Number(input.quantity) || 1;
-        store.cart.push({ ...product, quantity: qty });
-        return { success: true, message: `Added ${qty}x ${product.name} to cart`, cartSize: store.cart.length };
-      },
+      name: 'getProductList', description: 'Get all available products with name, price, stock, and description',
+      inputSchema: { type: 'object', properties: {} }, annotations: { readOnlyHint: true },
+      execute: async () => store.products.map(p => ({ name: p.name, category: p.category, price: '$' + p.price, stock: p.stock, inStock: p.stock > 0 })),
     });
 
     host.registerTool({
-      name: 'getStock',
-      description: 'Check stock level for a product',
-      inputSchema: {
-        type: 'object',
-        properties: {
-          productId: { type: 'string', description: 'Product ID to check' },
-        },
-        required: ['productId'],
-      },
+      name: 'getProductInfo', description: 'Get detailed info for a product by name (e.g. "Wireless Headphones")',
+      inputSchema: { type: 'object', properties: { productName: { type: 'string', description: 'Product name or partial name, e.g. "headphones"' } }, required: ['productName'] },
       annotations: { readOnlyHint: true },
-      execute: async (input) => {
-        const product = store.products[input.productId];
-        if (!product) throw new Error(`Product not found: ${input.productId}`);
-        return { productId: product.id, name: product.name, stock: product.stock };
-      },
+      execute: async (i) => { const p = findProduct(i.productName); if (!p) throw new Error('Product not found: ' + i.productName); return { name: p.name, category: p.category, price: '$' + p.price, originalPrice: p.originalPrice ? '$' + p.originalPrice : null, stock: p.stock, inStock: p.stock > 0, description: p.desc }; },
     });
 
     host.registerTool({
-      name: 'calculatePrice',
-      description: 'Calculate total price for a product order',
-      inputSchema: {
-        type: 'object',
-        properties: {
-          productId: { type: 'string' },
-          quantity: { type: 'number' },
-        },
-        required: ['productId', 'quantity'],
-      },
+      name: 'checkStock', description: 'Check stock availability for a product by name',
+      inputSchema: { type: 'object', properties: { productName: { type: 'string', description: 'Product name' } }, required: ['productName'] },
       annotations: { readOnlyHint: true },
-      execute: async (input) => {
-        const product = store.products[input.productId];
-        if (!product) throw new Error(`Product not found: ${input.productId}`);
-        const total = product.price * Number(input.quantity);
-        return { productId: product.id, unitPrice: product.price, quantity: input.quantity, total };
-      },
+      execute: async (i) => { const p = findProduct(i.productName); if (!p) throw new Error('Product not found: ' + i.productName); return { name: p.name, stock: p.stock, available: p.stock > 0, status: p.stock === 0 ? 'Out of Stock' : p.stock <= 5 ? 'Low Stock' : 'In Stock' }; },
     });
 
     host.registerTool({
-      name: 'submitOrder',
-      description: 'Submit a finalized order',
-      inputSchema: {
-        type: 'object',
-        properties: {
-          productId: { type: 'string' },
-          quantity: { type: 'number' },
-          totalPrice: { type: 'number' },
-        },
-        required: ['productId', 'quantity', 'totalPrice'],
-      },
-      execute: async (input) => {
-        const orderId = 'ORD-' + Math.random().toString(36).substring(2, 8).toUpperCase();
-        return { orderId, productId: input.productId, quantity: input.quantity, totalPrice: input.totalPrice, status: 'confirmed' };
-      },
+      name: 'searchProducts', description: 'Search products by keyword, category, or price range',
+      inputSchema: { type: 'object', properties: { keyword: { type: 'string' }, category: { type: 'string' }, maxPrice: { type: 'number' } }, required: [] },
+      annotations: { readOnlyHint: true },
+      execute: async (i) => { let results = store.products; if (i.keyword) { const q = i.keyword.toLowerCase(); results = results.filter(p => p.name.toLowerCase().includes(q) || p.desc.toLowerCase().includes(q) || p.category.toLowerCase().includes(q)); } if (i.category) results = results.filter(p => p.category.toLowerCase() === i.category.toLowerCase()); if (i.maxPrice) results = results.filter(p => p.price <= i.maxPrice); return results.map(p => ({ name: p.name, price: '$' + p.price, stock: p.stock, category: p.category })); },
     });
 
-    // Register Resources
-    host.registerResource({
-      uri: 'page://cart/items',
-      name: 'Cart Items',
-      description: 'Current items in the shopping cart',
-      handler: async () => ({ items: store.cart, totalItems: store.cart.length }),
+    // ---- WRITE Tools ----
+    host.registerTool({
+      name: 'addToCart', description: 'Add a product to the shopping cart by name',
+      inputSchema: { type: 'object', properties: { productName: { type: 'string', description: 'Product name, e.g. "Wireless Headphones"' }, quantity: { type: 'number', description: 'Quantity (default: 1)' } }, required: ['productName'] },
+      execute: async (i) => { const p = findProduct(i.productName); if (!p) throw new Error('Product not found: ' + i.productName); const qty = Number(i.quantity) || 1; if (p.stock < qty) throw new Error(`Only ${p.stock} "${p.name}" in stock`); const existing = store.cart.find(c => c.name === p.name); if (existing) { existing.quantity += qty } else { store.cart.push({ name: p.name, productId: p.id, quantity: qty, price: p.price, emoji: p.emoji }) } renderCart(); renderProducts(); toast('success', `Added ${qty}× ${p.name} to cart`); return { success: true, message: `Added ${qty}× ${p.name} to cart`, cartTotal: store.cart.reduce((s, c) => s + c.price * c.quantity, 0) }; },
     });
 
-    host.registerResource({
-      uri: 'page://products/catalog',
-      name: 'Product Catalog',
-      description: 'Available products for purchase',
-      handler: async () => ({ products: Object.values(store.products) }),
+    host.registerTool({
+      name: 'removeFromCart', description: 'Remove a product from the cart by name',
+      inputSchema: { type: 'object', properties: { productName: { type: 'string' } }, required: ['productName'] },
+      execute: async (i) => { const idx = store.cart.findIndex(c => c.name.toLowerCase().includes(i.productName.toLowerCase())); if (idx === -1) throw new Error('Product not in cart'); const removed = store.cart.splice(idx, 1)[0]; renderCart(); renderProducts(); toast('info', `Removed ${removed.name} from cart`); return { success: true, removed: removed.name }; },
     });
 
-    // Register Skills
+    host.registerTool({
+      name: 'getCartContents', description: 'View current shopping cart contents and total',
+      inputSchema: { type: 'object', properties: {} }, annotations: { readOnlyHint: true },
+      execute: async () => ({ items: store.cart.map(c => ({ name: c.name, quantity: c.quantity, unitPrice: '$' + c.price, subtotal: '$' + (c.price * c.quantity).toFixed(2) })), total: '$' + store.cart.reduce((s, c) => s + c.price * c.quantity, 0).toFixed(2), itemCount: store.cart.reduce((s, c) => s + c.quantity, 0) }),
+    });
+
+    // ---- EXECUTE Tools ----
+    host.registerTool({
+      name: 'placeOrder', description: 'Place an order for all items currently in the cart. Checks stock and processes the order.',
+      inputSchema: { type: 'object', properties: {} },
+      execute: async () => { if (!store.cart.length) throw new Error('Cart is empty'); for (const item of store.cart) { const p = findProduct(item.name); if (!p || p.stock < item.quantity) throw new Error(`Insufficient stock for "${item.name}": need ${item.quantity}, have ${p ? p.stock : 0}`); } const total = store.cart.reduce((s, c) => s + c.price * c.quantity, 0); const orderId = 'ORD-' + Math.random().toString(36).substring(2, 8).toUpperCase(); for (const item of store.cart) { const p = findProduct(item.name); p.stock -= item.quantity; } const order = { id: orderId, items: store.cart.map(c => ({ name: c.name, qty: c.quantity, price: c.price })), total, status: 'confirmed', time: new Date().toLocaleTimeString() }; store.orders.unshift(order); store.cart = []; renderCart(); renderProducts(); renderOrders(); toast('success', `Order ${orderId} placed! Total: $${total.toFixed(2)}`); return { orderId, total: '$' + total.toFixed(2), status: 'confirmed', items: order.items.map(i => i.qty + '× ' + i.name).join(', ') }; },
+    });
+
+    host.registerTool({
+      name: 'quickBuy', description: 'Quickly buy a product by name — adds to cart and places order in one step',
+      inputSchema: { type: 'object', properties: { productName: { type: 'string' }, quantity: { type: 'number', description: 'Default: 1' } }, required: ['productName'] },
+      execute: async (i) => { const p = findProduct(i.productName); if (!p) throw new Error('Product not found: ' + i.productName); const qty = Number(i.quantity) || 1; if (p.stock < qty) throw new Error(`Insufficient stock for "${p.name}": need ${qty}, have ${p.stock}`); p.stock -= qty; const total = p.price * qty; const orderId = 'ORD-' + Math.random().toString(36).substring(2, 8).toUpperCase(); store.orders.unshift({ id: orderId, items: [{ name: p.name, qty, price: p.price }], total, status: 'confirmed', time: new Date().toLocaleTimeString() }); renderProducts(); renderOrders(); toast('success', `Quick order ${orderId}: ${qty}× ${p.name} — $${total.toFixed(2)}`); return { orderId, product: p.name, quantity: qty, total: '$' + total.toFixed(2), status: 'confirmed' }; },
+    });
+
+    // ---- RESOURCES ----
+    host.registerResource({ uri: 'page://cart', name: 'Shopping Cart', description: 'Current cart contents and total', handler: async () => ({ items: store.cart, total: '$' + store.cart.reduce((s, c) => s + c.price * c.quantity, 0).toFixed(2) }) });
+    host.registerResource({ uri: 'page://products', name: 'Product Catalog', description: 'All products with stock info', handler: async () => ({ products: store.products.map(p => ({ name: p.name, price: '$' + p.price, stock: p.stock, category: p.category })) }) });
+    host.registerResource({ uri: 'page://orders', name: 'Order History', description: 'Past orders', handler: async () => ({ orders: store.orders }) });
+
+    // ---- SKILLS ----
     host.registerSkill({
-      name: 'placeOrder',
-      description: 'Full order workflow: check stock → calculate price → submit order',
-      inputSchema: {
-        type: 'object',
-        properties: {
-          productId: { type: 'string' },
-          quantity: { type: 'number' },
-        },
-        required: ['productId', 'quantity'],
-      },
+      name: 'smartOrder', description: 'Smart order: find product by name → check stock → add to cart → place order. Handles everything automatically.',
+      inputSchema: { type: 'object', properties: { productName: { type: 'string', description: 'Product name' }, quantity: { type: 'number', description: 'Quantity (default: 1)' } }, required: ['productName'] },
       steps: [
-        {
-          name: 'checkStock',
-          tool: 'getStock',
-          input: (args) => ({ productId: args.productId }),
-          validate: (result, args) => result.stock >= Number(args.quantity),
-          onFail: { error: 'Insufficient stock for this order' },
-        },
-        {
-          name: 'calcPrice',
-          tool: 'calculatePrice',
-          input: (args) => ({ productId: args.productId, quantity: args.quantity }),
-        },
-        {
-          name: 'submit',
-          tool: 'submitOrder',
-          input: (args, prev) => ({
-            productId: args.productId,
-            quantity: args.quantity,
-            totalPrice: prev.calcPrice.total,
-          }),
-        },
+        { name: 'findProduct', tool: 'getProductInfo', input: (a) => ({ productName: a.productName }), validate: (r) => !!r.name, onFail: { error: 'Product not found' } },
+        { name: 'verifyStock', tool: 'checkStock', input: (a) => ({ productName: a.productName }), validate: (r, a) => r.stock >= Number(a.quantity || 1), onFail: { error: 'Insufficient stock for this order' } },
+        { name: 'addItem', tool: 'addToCart', input: (a, prev) => ({ productName: prev.findProduct.name, quantity: a.quantity || 1 }) },
+        { name: 'checkout', tool: 'placeOrder', input: () => ({}) },
+      ],
+    });
+
+    host.registerSkill({
+      name: 'compareProducts', description: 'Compare two products side by side',
+      inputSchema: { type: 'object', properties: { product1: { type: 'string' }, product2: { type: 'string' } }, required: ['product1', 'product2'] },
+      steps: [
+        { name: 'info1', tool: 'getProductInfo', input: (a) => ({ productName: a.product1 }) },
+        { name: 'info2', tool: 'getProductInfo', input: (a) => ({ productName: a.product2 }) },
       ],
     });
 
     host.start();
 
-    // ============================================================
-    // WebMCP Polyfill Demo
-    // ============================================================
-    installWebMcpPolyfill(host);
-    console.log(`[Page MCP] WebMCP native support: ${isWebMcpSupported()}`);
-    console.log('[Page MCP] navigator.modelContext polyfill installed');
+    // Client
+    const client = new PageMcpCore.PageMcpClient({ bus });
+    bus.on('rpc:request', d => rpcLog('req', d.method, d.params));
+    bus.on('rpc:response', d => d.error ? rpcLog('err', 'ERROR', d.error) : rpcLog('res', 'RESULT', d.result));
 
     // ============================================================
-    // 3. Setup Client (AI Side)
+    // RENDER
     // ============================================================
-    const client = new PageMcpClient({ bus });
-
-    // ============================================================
-    // 4. Wire up RPC logging
-    // ============================================================
-    bus.on('rpc:request', (data) => {
-      logToConsole('req', data.method, data.params);
-    });
-    bus.on('rpc:response', (data) => {
-      if (data.error) {
-        logToConsole('err', 'ERROR', data.error);
-      } else {
-        logToConsole('res', 'RESULT', data.result);
-      }
-    });
-
-    // ============================================================
-    // 5. Render registered items on the left panel
-    // ============================================================
-    function renderRegistered() {
-      // Tools
-      const toolsEl = document.getElementById('tools-list');
-      const tools = [
-        { name: 'addToCart', desc: 'Add a product to the shopping cart' },
-        { name: 'getStock', desc: 'Check stock level for a product' },
-        { name: 'calculatePrice', desc: 'Calculate total price for an order' },
-        { name: 'submitOrder', desc: 'Submit a finalized order' },
-      ];
-      toolsEl.innerHTML = tools.map(t => `
-      <div class="reg-item">
-        <div class="name">${t.name}()</div>
-        <div class="desc">${t.desc}</div>
-      </div>
-    `).join('');
-      document.getElementById('tool-count').textContent = tools.length;
-
-      // Resources
-      const resEl = document.getElementById('resources-list');
-      const resources = [
-        { uri: 'page://cart/items', name: 'Cart Items', desc: 'Shopping cart contents' },
-        { uri: 'page://products/catalog', name: 'Product Catalog', desc: 'Available products' },
-      ];
-      resEl.innerHTML = resources.map(r => `
-      <div class="reg-item">
-        <div class="name">${r.name}</div>
-        <div class="uri">${r.uri}</div>
-        <div class="desc">${r.desc}</div>
-      </div>
-    `).join('');
-      document.getElementById('resource-count').textContent = resources.length;
-
-      // Skills
-      const skillsEl = document.getElementById('skills-list');
-      const skills = [
-        { name: 'placeOrder', desc: 'Full order workflow: check stock → calc price → submit', steps: ['checkStock', 'calcPrice', 'submit'] },
-      ];
-      skillsEl.innerHTML = skills.map(s => `
-      <div class="reg-item">
-        <div class="name">${s.name}</div>
-        <div class="desc">${s.desc}</div>
-        <div class="steps-list">${s.steps.map(st => `<span class="step-badge">${st}</span>`).join('')}</div>
-      </div>
-    `).join('');
-      document.getElementById('skill-count').textContent = skills.length;
+    function renderProducts() {
+      const el = document.getElementById('products');
+      el.innerHTML = store.products.map(p => {
+        const inCart = store.cart.find(c => c.name === p.name);
+        const stockClass = p.stock === 0 ? '' : p.stock <= 5 ? ' low' : '';
+        const stockLabel = p.stock === 0 ? 'Out of Stock' : p.stock <= 5 ? 'Low: ' + p.stock + ' left' : 'In Stock: ' + p.stock;
+        return `<div class="product"><div class="product-img">${p.emoji}<span class="stock-tag${stockClass}">${stockLabel}</span></div><div class="product-info"><div class="product-cat">${p.category}</div><div class="product-name">${p.name}</div><div class="product-desc">${p.desc}</div><div class="product-bottom"><div class="product-price">$${p.price}${p.originalPrice ? '<span class="old">$' + p.originalPrice + '</span>' : ''}</div>${p.stock > 0 ? `<button class="add-btn${inCart ? ' in-cart' : ''}" onclick="uiAddToCart('${p.name}')">${inCart ? '✓ In Cart' : '+ Add'}</button>` : '<button class="add-btn" disabled style="opacity:.4;cursor:not-allowed">Sold Out</button>'}</div></div></div>`;
+      }).join('');
     }
-    renderRegistered();
+
+    function renderCart() {
+      const body = document.getElementById('cart-body');
+      const badge = document.getElementById('cart-badge');
+      const totalEl = document.getElementById('cart-total');
+      const checkBtn = document.getElementById('checkout-btn');
+      const count = store.cart.reduce((s, c) => s + c.quantity, 0);
+      badge.textContent = count;
+      checkBtn.disabled = count === 0;
+      if (!store.cart.length) { body.innerHTML = '<div class="cart-empty">Your cart is empty</div>'; totalEl.textContent = '$0.00'; return; }
+      const total = store.cart.reduce((s, c) => s + c.price * c.quantity, 0);
+      totalEl.textContent = '$' + total.toFixed(2);
+      body.innerHTML = store.cart.map((c, i) => `<div class="cart-item"><div class="cart-item-img">${c.emoji}</div><div class="cart-item-info"><div class="cart-item-name">${c.name}</div><div class="cart-item-price">$${c.price} × ${c.quantity} = $${(c.price * c.quantity).toFixed(2)}</div><div class="cart-item-qty"><button class="qty-btn" onclick="uiChangeQty(${i},-1)">−</button><span>${c.quantity}</span><button class="qty-btn" onclick="uiChangeQty(${i},1)">+</button></div></div><button class="cart-item-rm" onclick="uiRemoveCart(${i})">🗑️</button></div>`).join('');
+    }
+
+    function renderOrders() {
+      const el = document.getElementById('order-list');
+      if (!store.orders.length) { el.innerHTML = '<div style="color:var(--t3);font-size:13px">No orders yet.</div>'; return; }
+      el.innerHTML = store.orders.map(o => `<div class="order-card"><div class="order-hd"><span class="order-id">${o.id}</span><span class="order-status ${o.status}">${o.status}</span></div><div class="order-items">${o.items.map(i => i.qty + '× ' + i.name).join(', ')}</div><div class="order-total">$${o.total.toFixed(2)} · ${o.time}</div></div>`).join('');
+    }
 
     // ============================================================
-    // 6. Expose actions to buttons
+    // UI ACTIONS
     // ============================================================
-    window.doConnect = async () => {
-      try {
-        const info = await client.connect();
-        document.getElementById('connect-indicator').classList.add('on');
-        document.getElementById('connect-status').textContent = `Connected to ${info.name} v${info.version}`;
-        document.getElementById('btn-connect').textContent = '✅ Connected';
-        document.getElementById('btn-connect').disabled = true;
-        logToConsole('info', 'Connected', info);
-      } catch (e) {
-        logToConsole('err', 'Connection failed', e.message);
-      }
-    };
+    window.uiAddToCart = async (name) => { try { await client.callTool('addToCart', { productName: name, quantity: 1 }) } catch (e) { toast('error', e.message) } };
+    window.uiChangeQty = (idx, delta) => { store.cart[idx].quantity += delta; if (store.cart[idx].quantity <= 0) store.cart.splice(idx, 1); renderCart(); renderProducts(); };
+    window.uiRemoveCart = (idx) => { const nm = store.cart[idx].name; store.cart.splice(idx, 1); renderCart(); renderProducts(); toast('info', 'Removed ' + nm); };
+    window.doCheckout = async () => { try { await client.callTool('placeOrder', {}) } catch (e) { toast('error', e.message) } };
+    window.openCart = () => { document.getElementById('cart-overlay').classList.add('open'); document.getElementById('cart-drawer').classList.add('open') };
+    window.closeCart = () => { document.getElementById('cart-overlay').classList.remove('open'); document.getElementById('cart-drawer').classList.remove('open') };
 
-    window.doListTools = async () => {
-      try {
-        const tools = await client.listTools();
-        showResult('Tools', tools);
-      } catch (e) { logToConsole('err', 'Error', e.message); }
-    };
-
-    window.doCallTool = async () => {
-      try {
-        const result = await client.callTool('addToCart', { productId: 'p001', quantity: 2 });
-        showResult('addToCart Result', result);
-      } catch (e) { logToConsole('err', 'Error', e.message); }
-    };
-
-    window.doCallGetStock = async () => {
-      try {
-        const result = await client.callTool('getStock', { productId: 'p002' });
-        showResult('getStock Result', result);
-      } catch (e) { logToConsole('err', 'Error', e.message); }
-    };
-
-    window.doListResources = async () => {
-      try {
-        const resources = await client.listResources();
-        showResult('Resources', resources);
-      } catch (e) { logToConsole('err', 'Error', e.message); }
-    };
-
-    window.doReadResource = async () => {
-      try {
-        const data = await client.readResource('page://cart/items');
-        showResult('page://cart/items', data);
-      } catch (e) { logToConsole('err', 'Error', e.message); }
-    };
-
-    window.doListSkills = async () => {
-      try {
-        const skills = await client.listSkills();
-        showResult('Skills', skills);
-      } catch (e) { logToConsole('err', 'Error', e.message); }
-    };
-
-    window.doExecuteSkill = async () => {
-      try {
-        const result = await client.executeSkill('placeOrder', { productId: 'p001', quantity: 3 });
-        showResult('placeOrder Skill Result', result);
-      } catch (e) { logToConsole('err', 'Error', e.message); }
-    };
-
-    window.clearConsole = () => {
-      document.getElementById('console').innerHTML = '';
+    // ============================================================
+    // SETTINGS MODAL
+    // ============================================================
+    window.openSettings = () => document.getElementById('settings-modal').classList.add('open');
+    window.closeSettings = () => document.getElementById('settings-modal').classList.remove('open');
+    window.applySettings = () => {
+      const apiKey = document.getElementById('cfg-apikey').value, baseUrl = document.getElementById('cfg-baseurl').value, model = document.getElementById('cfg-model').value;
+      const cfg = {
+        bus, position: document.getElementById('cfg-position').value, theme: document.getElementById('cfg-theme').value, accentColor: document.getElementById('cfg-color').value, title: document.getElementById('cfg-title').value,
+        welcomeMessage: 'Hi! 👋 I\'m TechMart AI. I can help you find products, check stock, manage your cart, and place orders. Just ask!'
+      };
+      if (apiKey) { cfg.openai = { apiKey, model: model || 'gpt-4o' }; if (baseUrl) cfg.openai.baseURL = baseUrl; }
+      if (window._chatWidget) window._chatWidget.destroy();
+      window._chatWidget = PageMcpChat.init(cfg); closeSettings(); toast('success', 'AI Chat reinitialized');
     };
 
     // ============================================================
-    // Helpers
+    // MCP DEBUG MODAL
     // ============================================================
-    function logToConsole(tag, method, data) {
-      const el = document.getElementById('console');
-      const time = new Date().toLocaleTimeString('en-US', { hour12: false });
-      const entry = document.createElement('div');
-      entry.className = 'log-entry';
-      entry.innerHTML = `
-      <span class="log-time">${time}</span>
-      <span class="log-tag ${tag}">${tag.toUpperCase()}</span>
-      <span class="log-content">
-        <span class="method">${method}</span>
-        ${data ? `<span class="data"> ${JSON.stringify(data)}</span>` : ''}
-      </span>
-    `;
-      el.appendChild(entry);
+    window.openMcpDebug = () => { renderMcpDebug(); document.getElementById('mcp-modal').classList.add('open') };
+    window.closeMcpDebug = () => document.getElementById('mcp-modal').classList.remove('open');
+
+    function renderMcpDebug() {
+      const tools = [
+        { nm: 'getProductList', ds: 'List all products', t: 'r' }, { nm: 'getProductInfo', ds: 'Get details by name', t: 'r' },
+        { nm: 'checkStock', ds: 'Check stock by name', t: 'r' }, { nm: 'searchProducts', ds: 'Search by keyword/category/price', t: 'r' },
+        { nm: 'addToCart', ds: 'Add product to cart by name', t: 'w' }, { nm: 'removeFromCart', ds: 'Remove from cart by name', t: 'w' },
+        { nm: 'getCartContents', ds: 'View cart contents', t: 'r' }, { nm: 'placeOrder', ds: 'Place order for cart items', t: 'x' },
+        { nm: 'quickBuy', ds: 'One-step buy by product name', t: 'x' },
+      ];
+      document.getElementById('mcp-tools').innerHTML = tools.map(t => `<div class="mcp-item"><span class="nm">${t.nm}()</span><span class="tag tag-${t.t}">${t.t === 'r' ? 'read' : t.t === 'w' ? 'write' : 'exec'}</span><div class="ds">${t.ds}</div></div>`).join('');
+      document.getElementById('mcp-tool-cnt').textContent = tools.length;
+
+      const res = [{ uri: 'page://cart', nm: 'Shopping Cart' }, { uri: 'page://products', nm: 'Product Catalog' }, { uri: 'page://orders', nm: 'Order History' }];
+      document.getElementById('mcp-resources').innerHTML = res.map(r => `<div class="mcp-item"><span class="nm">${r.nm}</span><div class="ds">${r.uri}</div></div>`).join('');
+      document.getElementById('mcp-res-cnt').textContent = res.length;
+
+      const skills = [{ nm: 'smartOrder', ds: 'Find → Stock → Cart → Order (auto)' }, { nm: 'compareProducts', ds: 'Compare two products side by side' }];
+      document.getElementById('mcp-skills').innerHTML = skills.map(s => `<div class="mcp-item"><span class="nm">${s.nm}</span><div class="ds">${s.ds}</div></div>`).join('');
+      document.getElementById('mcp-skill-cnt').textContent = skills.length;
+    }
+
+    window.qTest = async (action) => {
+      const area = document.getElementById('mcp-result');
+      try {
+        let r;
+        if (action === 'listTools') r = await client.listTools();
+        else if (action === 'listResources') r = await client.listResources();
+        else if (action === 'listSkills') r = await client.listSkills();
+        else if (action === 'readCart') r = await client.readResource('page://cart');
+        else if (action === 'readCatalog') r = await client.readResource('page://products');
+        area.innerHTML = `<div style="background:var(--bg);border:1px solid var(--bdr);border-radius:8px;padding:8px;margin-top:6px;max-height:180px;overflow:auto"><pre style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--cyan);white-space:pre-wrap">${JSON.stringify(r, null, 2)}</pre></div>`;
+      } catch (e) { area.innerHTML = `<div style="color:var(--red);font-size:11px">${e.message}</div>` }
+    };
+
+    function rpcLog(tag, method, data) {
+      const el = document.getElementById('rpc-console'); if (!el) return;
+      const t = new Date().toLocaleTimeString('en-US', { hour12: false });
+      el.innerHTML += `<div class="clog"><span class="ct">${t}</span><span class="ck ck-${tag}">${tag.toUpperCase()}</span><span class="cm">${method}</span> <span class="cd">${data ? JSON.stringify(data).substring(0, 120) : ''}</span></div>`;
       el.scrollTop = el.scrollHeight;
     }
 
-    function showResult(title, data) {
-      const area = document.getElementById('result-area');
-      area.innerHTML = `
-      <div class="result-card">
-        <div style="font-size:12px; color:var(--accent-orange); font-weight:600; margin-bottom:8px;">${title}</div>
-        <pre>${JSON.stringify(data, null, 2)}</pre>
-      </div>
-    `;
+    // ============================================================
+    // TOAST
+    // ============================================================
+    function toast(type, msg) {
+      const c = document.getElementById('toasts');
+      const t = document.createElement('div');
+      t.className = 'toast ' + type;
+      t.innerHTML = (type === 'success' ? '✅' : type === 'error' ? '❌' : 'ℹ️') + ' ' + msg;
+      c.appendChild(t);
+      setTimeout(() => { t.style.opacity = '0'; t.style.transform = 'translateX(40px)'; setTimeout(() => t.remove(), 300) }, 3000);
     }
-  </script>
 
+    // ============================================================
+    // INIT
+    // ============================================================
+    renderProducts();
+    renderCart();
+    renderOrders();
+
+    client.connect().then(() => {
+      toast('success', 'Connected to MCP Host');
+    }).catch(() => { });
+
+    window._chatWidget = PageMcpChat.init({
+      bus, position: 'bottom-right', theme: 'dark', accentColor: '#6366f1', title: 'TechMart AI',
+      welcomeMessage: 'Hi! 👋 I\'m your TechMart AI assistant. I can help you:\n• 🔍 Search & browse products\n• 📦 Check stock availability\n• 🛒 Manage your cart\n• 🚀 Place orders\n\nJust ask me anything!'
+    });
+  </script>
 </body>
 
 </html>

@@ -2,6 +2,16 @@
     "name": "@page-mcp/core",
     "version": "0.1.0",
     "description": "Core SDK for Page MCP — expose web page capabilities to AI",
+    "license": "MIT",
+    "keywords": [
+        "mcp",
+        "page-mcp",
+        "ai",
+        "llm",
+        "tools",
+        "web-sdk",
+        "webmcp"
+    ],
     "type": "module",
     "main": "./dist/index.cjs",
     "module": "./dist/index.js",
@@ -14,7 +24,8 @@
         }
     },
     "files": [
-        "dist"
+        "dist",
+        "README.md"
     ],
     "scripts": {
         "build": "tsup",
