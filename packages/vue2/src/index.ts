@@ -9,6 +9,7 @@ import {
     type ToolDefinition,
     type ResourceDefinition,
     type SkillDefinition,
+    type PromptDefinition,
     type HostInfo,
 } from '@page-mcp/core';
 
@@ -27,6 +28,7 @@ interface Vue2Instance {
         pageMcpTools?: ToolDefinition[];
         pageMcpResources?: ResourceDefinition[];
         pageMcpSkills?: SkillDefinition[];
+        pageMcpPrompts?: PromptDefinition[];
         parent?: Vue2Instance;
         [key: string]: unknown;
     };
@@ -152,6 +154,18 @@ const pageMcpAutoRegisterMixin: Vue2ComponentOptions = {
                 }
             }
         }
+
+        // Register prompts from component options
+        const prompts = this.$options.pageMcpPrompts;
+        if (prompts && Array.isArray(prompts)) {
+            for (const prompt of prompts) {
+                try {
+                    host.registerPrompt(prompt);
+                } catch {
+                    // Already registered
+                }
+            }
+        }
     },
 };
 
@@ -177,5 +191,7 @@ export type {
     SkillDefinition,
     SkillInfo,
     SkillResult,
+    PromptDefinition,
+    PromptInfo,
     HostInfo,
 } from '@page-mcp/core';
