@@ -1,14 +1,15 @@
 {
-    "name": "@page-mcp/react",
+    "name": "@page-mcp/chat",
     "version": "0.1.0",
-    "description": "React adapter for Page MCP SDK — Provider + Hooks",
+    "description": "Embeddable AI Chat Widget with OpenAI-compatible API + Page MCP integration",
     "license": "MIT",
     "keywords": [
         "mcp",
         "page-mcp",
-        "react",
-        "hooks",
         "ai",
+        "chat",
+        "widget",
+        "openai",
         "llm"
     ],
     "type": "module",
@@ -28,16 +29,13 @@
     ],
     "scripts": {
         "build": "tsup",
+        "dev": "tsup --watch",
         "typecheck": "tsc --noEmit"
     },
-    "peerDependencies": {
-        "react": ">=17.0.0",
-        "@page-mcp/core": ">=0.1.0"
+    "dependencies": {
+        "@page-mcp/core": "workspace:^"
     },
     "devDependencies": {
-        "react": "^18.0.0",
-        "@types/react": "^18.0.0",
-        "@page-mcp/core": "workspace:^",
         "tsup": "^8.0.0",
         "typescript": "^5.4.0"
     }

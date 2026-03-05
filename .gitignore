@@ -27,4 +27,12 @@ pnpm-debug.log*
 
 # OS
 Thumbs.db
+
+# Lock files (pnpm only — ignore npm lock)
 package-lock.json
+
+# Vercel build output
+public/
+
+# Packed tarballs
+*.tgz

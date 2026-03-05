@@ -4,9 +4,11 @@
     "scripts": {
         "build": "pnpm -r run build",
         "build:core": "pnpm --filter @page-mcp/core run build",
+        "build:chat": "pnpm --filter @page-mcp/chat run build",
         "build:react": "pnpm --filter @page-mcp/react run build",
         "build:vue3": "pnpm --filter @page-mcp/vue3 run build",
         "build:vue2": "pnpm --filter @page-mcp/vue2 run build",
+        "build:demo": "bash scripts/build-demo.sh",
         "typecheck": "pnpm -r run typecheck"
     }
 }
