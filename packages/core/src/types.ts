@@ -100,6 +100,30 @@ export interface SkillResult {
     error?: string;
 }
 
+// ------ Prompt (Page MCP extension: predefined AI conversation starters) ------
+
+export interface PromptDefinition {
+    /** Unique identifier */
+    name: string;
+    /** User-facing title displayed on the card */
+    title: string;
+    /** Description for AI context */
+    description: string;
+    /** Emoji or icon URL (optional) */
+    icon?: string;
+    /** Pre-written prompt text sent to AI on click */
+    prompt: string;
+}
+
+/** Prompt info exposed to the client (same shape — no server-only fields) */
+export interface PromptInfo {
+    name: string;
+    title: string;
+    description: string;
+    icon?: string;
+    prompt: string;
+}
+
 // ------ RPC Messages ------
 
 export type RpcMethod =
@@ -110,7 +134,8 @@ export type RpcMethod =
     | 'listResources'
     | 'readResource'
     | 'listSkills'
-    | 'executeSkill';
+    | 'executeSkill'
+    | 'listPrompts';
 
 export interface RpcRequest {
     id: string;
