@@ -1,16 +1,18 @@
 # @page-mcp/vue3
 
-Page MCP SDK 的 Vue 3 适配器。提供 Plugin、Provider 组件和 Composables。
+Vue 3 adapter for the Page MCP SDK. Provides a Plugin, Provider component, and Composables.
 
-## 安装
+> 🌐 **Live Preview:** [https://page-mcp.org](https://page-mcp.org)
+
+## Installation
 
 ```bash
 npm install @page-mcp/core @page-mcp/vue3
 ```
 
-## 使用
+## Quick Start
 
-### 方式一：全局 Plugin（推荐）
+### Option 1: Global Plugin (Recommended)
 
 ```typescript
 // main.ts
@@ -23,7 +25,7 @@ app.use(PageMcpPlugin, { name: 'my-app', version: '1.0' });
 app.mount('#app');
 ```
 
-### 方式二：局部 Provider
+### Option 2: Local Provider
 
 ```vue
 <template>
@@ -37,17 +39,24 @@ import { PageMcpProvider } from '@page-mcp/vue3';
 </script>
 ```
 
-### 在组件中使用
+### Register Tools in Components
 
 ```vue
 <script setup lang="ts">
-import { useRegisterTool, usePageMcpClient } from '@page-mcp/vue3';
+import { useRegisterTool, useRegisterResource, usePageMcpClient } from '@page-mcp/vue3';
 
 useRegisterTool({
   name: 'getFormData',
-  description: '获取表单数据',
-  parameters: { type: 'object', properties: {} },
-  handler: async () => ({ name: 'test' })
+  description: 'Get current form data',
+  inputSchema: { type: 'object', properties: {} },
+  execute: async () => ({ name: formData.name, email: formData.email })
+});
+
+useRegisterResource({
+  uri: 'page://form/data',
+  name: 'Form Data',
+  description: 'Current form field values',
+  handler: async () => ({ ...formData })
 });
 
 const client = usePageMcpClient();
@@ -56,13 +65,23 @@ const client = usePageMcpClient();
 
 ## API
 
-| Composable | 描述 |
-|------------|------|
-| `usePageMcpHost()` | 获取 Host 实例 |
-| `usePageMcpClient()` | 获取 Client 实例 |
-| `usePageMcpBus()` | 获取 EventBus |
-| `useRegisterTool(def)` | 注册工具 |
-| `useRegisterResource(def)` | 注册资源 |
-| `useRegisterSkill(def)` | 注册技能 |
+| Composable | Description |
+|---|---|
+| `usePageMcpHost()` | Get the `PageMcpHost` instance |
+| `usePageMcpClient()` | Get the `PageMcpClient` instance |
+| `usePageMcpBus()` | Get the `EventBus` instance |
+| `useRegisterTool(def)` | Register a tool (auto-cleanup on unmount) |
+| `useRegisterResource(def)` | Register a resource (auto-cleanup on unmount) |
+| `useRegisterSkill(def)` | Register a skill (auto-cleanup on unmount) |
 
-详细文档请参阅 [主 README](../../README.md#vue-3-page-mcpvue3)。
+## How It Works
+
+- `PageMcpPlugin` / `PageMcpProvider` creates `EventBus`, `PageMcpHost`, and `PageMcpClient` instances and provides them via Vue's `provide/inject`.
+- Composables (`useRegisterTool`, etc.) register capabilities on mount and automatically clean up via `onUnmounted`.
+- The Host is started automatically when the Plugin is installed or Provider is mounted.
+
+For detailed documentation, see the [main README](../../README.md#vue-3-page-mcpvue3).
+
+## License
+
+MIT

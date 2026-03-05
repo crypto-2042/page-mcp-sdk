@@ -7,12 +7,12 @@
 </p>
 
 <p align="center">
+  <a href="https://page-mcp.org">🌐 在线预览</a> ·
   <a href="#包一览">包一览</a> ·
   <a href="#快速开始">快速开始</a> ·
   <a href="#核心概念">核心概念</a> ·
   <a href="#框架适配">框架适配</a> ·
   <a href="#api-参考">API</a> ·
-  <a href="#demo">Demo</a> ·
   <a href="./README.md">English</a>
 </p>
 
@@ -25,6 +25,32 @@
 
 ---
 
+## 目录
+
+- [概述](#概述)
+- [与 WebMCP 的关系](#与-webmcp-的关系)
+- [包一览](#包一览)
+- [快速开始](#快速开始)
+  - [安装](#安装)
+  - [最简示例（纯 JS）](#最简示例纯-js)
+  - [Script Tag（CDN / IIFE）](#script-tagcdn--iife)
+- [核心概念](#核心概念)
+  - [Tools（工具）— WebMCP 对齐](#tools工具-webmcp-对齐)
+  - [Resources（资源）— 超越 WebMCP](#resources资源-超越-webmcp)
+  - [Skills（技能/工作流）— 超越 WebMCP](#skills技能工作流-超越-webmcp)
+  - [WebMCP Polyfill](#webmcp-polyfill)
+  - [Chat Widget（聊天组件）](#chat-widget聊天组件)
+- [框架适配](#框架适配)
+  - [React](#react-page-mcpreact)
+  - [Vue 3](#vue-3-page-mcpvue3)
+  - [Vue 2](#vue-2-page-mcpvue2)
+- [API 参考](#api-参考)
+- [Demo](#demo)
+- [开发指南](#开发指南)
+- [许可证](#许可证)
+
+---
+
 ## 概述
 
 AI Agent 越来越需要理解和操作网页。传统的 DOM 抓取既脆弱又低效。**Page MCP SDK** 让页面主动「自我解释」，通过结构化的 MCP 协议将能力暴露给 AI：
@@ -33,6 +59,8 @@ AI Agent 越来越需要理解和操作网页。传统的 DOM 抓取既脆弱又
 - 📖 **Resources（资源）** — 可读取的数据（如「购物车内容」、「商品目录」）— *超越 WebMCP*
 - 🚀 **Skills（技能）** — 编排多个工具的工作流（如「智能下单」）— *超越 WebMCP*
 - 💬 **Chat Widget（聊天组件）** — 可嵌入的 AI 助手，自动发现已注册的 MCP 工具
+
+> 🌐 **在线预览：** [https://page-mcp.org](https://page-mcp.org) — 体验 TechMart 电商 Demo 及 AI 助手
 
 ```
 ┌──────────────────────────────────────────┐
@@ -153,7 +181,7 @@ console.log('搜索结果:', result);
   // 启动 AI 聊天组件 — 自动发现已注册的工具
   PageMcpChat.init({
     bus,
-    openai: { apiKey: 'sk-xxx', model: 'gpt-4o' },
+    openai: { apiKey: 'sk-xxx', model: 'gpt-5.2' },
     theme: 'dark',
     position: 'bottom-right',
   });
@@ -306,7 +334,7 @@ const widget = init({
   openai: {
     apiKey: 'sk-xxx',
     baseURL: 'https://api.openai.com/v1',          // 支持任何 OpenAI 兼容的端点
-    model: 'gpt-4o',
+    model: 'gpt-5.2',
   },
   theme: 'dark',                                   // 'dark' | 'light' | 'auto'
   position: 'bottom-right',                        // 悬浮按钮位置
@@ -323,7 +351,8 @@ widget.destroy();
 
 ## 框架适配
 
-### React (`@page-mcp/react`)
+<details>
+<summary><h3>React (<code>@page-mcp/react</code>)</h3></summary>
 
 提供 Provider 组件 + Hooks，符合 React 最佳实践。
 
@@ -368,7 +397,10 @@ function ProductPage() {
 | `useRegisterResource(def)` | 注册资源 |
 | `useRegisterSkill(def)` | 注册技能 |
 
-### Vue 3 (`@page-mcp/vue3`)
+</details>
+
+<details>
+<summary><h3>Vue 3 (<code>@page-mcp/vue3</code>)</h3></summary>
 
 提供 Plugin + Composables。
 
@@ -406,7 +438,10 @@ const client = usePageMcpClient();
 | `useRegisterResource(def)` | 注册资源 |
 | `useRegisterSkill(def)` | 注册技能 |
 
-### Vue 2 (`@page-mcp/vue2`)
+</details>
+
+<details>
+<summary><h3>Vue 2 (<code>@page-mcp/vue2</code>)</h3></summary>
 
 提供 Plugin + Mixin，通过 `this.$pageMcp` 访问。
 
@@ -447,6 +482,8 @@ export default {
 | `pageMcpTools` 选项 | 组件创建时自动注册的工具数组 |
 | `pageMcpResources` 选项 | 组件创建时自动注册的资源数组 |
 | `pageMcpSkills` 选项 | 组件创建时自动注册的技能数组 |
+
+</details>
 
 ## API 参考
 
@@ -518,6 +555,8 @@ client.disconnect();
 | `executeSkill` | 执行技能 | `{ name, args }` |
 
 ## Demo
+
+> 🌐 **在线预览：** [https://page-mcp.org](https://page-mcp.org)
 
 项目包含一个完整的电商 Demo（TechMart），展示 SDK 的全部能力：
 

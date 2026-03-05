@@ -44,7 +44,7 @@ export class ChatEngine {
     private endpointHeaders: Record<string, string> = {};
 
     constructor(private config: ChatConfig) {
-        this.model = config.openai?.model ?? 'gpt-4o';
+        this.model = config.openai?.model ?? 'gpt-5.2';
         this.systemPrompt = config.systemPrompt ?? 'You are a helpful AI assistant embedded in a web page. You can use the available tools to interact with the page and help the user accomplish tasks.';
 
         // Setup OpenAI direct mode
@@ -459,6 +459,21 @@ export class ChatEngine {
                 console.error(`[PageMcpChat] Event handler error (${event}):`, err);
             }
         });
+    }
+
+    /** Clear all messages and re-add welcome message */
+    clearMessages(): void {
+        this.messages = [];
+        if (this.config.welcomeMessage) {
+            const welcomeMsg: ChatMessage = {
+                id: this.genId(),
+                role: 'assistant',
+                content: this.config.welcomeMessage,
+                timestamp: Date.now(),
+            };
+            this.messages.push(welcomeMsg);
+            this.emit('message', welcomeMsg);
+        }
     }
 
     /** Clean up */

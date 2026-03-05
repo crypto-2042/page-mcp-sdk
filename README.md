@@ -7,12 +7,12 @@
 </p>
 
 <p align="center">
+  <a href="https://page-mcp.org">🌐 Live Demo</a> ·
   <a href="#packages">Packages</a> ·
   <a href="#quick-start">Quick Start</a> ·
   <a href="#core-concepts">Concepts</a> ·
   <a href="#framework-adapters">Frameworks</a> ·
   <a href="#api-reference">API</a> ·
-  <a href="#demo">Demo</a> ·
   <a href="./README.zh-CN.md">中文文档</a>
 </p>
 
@@ -25,6 +25,32 @@
 
 ---
 
+## Table of Contents
+
+- [Overview](#overview)
+- [Relationship with WebMCP](#relationship-with-webmcp)
+- [Packages](#packages)
+- [Quick Start](#quick-start)
+  - [Installation](#installation)
+  - [Basic Example (Vanilla JS)](#basic-example-vanilla-js)
+  - [Script Tag (CDN / IIFE)](#script-tag-cdn--iife)
+- [Core Concepts](#core-concepts)
+  - [Tools — WebMCP Aligned](#tools--webmcp-aligned)
+  - [Resources — Beyond WebMCP](#resources--beyond-webmcp)
+  - [Skills — Beyond WebMCP](#skills--beyond-webmcp)
+  - [WebMCP Polyfill](#webmcp-polyfill)
+  - [Chat Widget](#chat-widget)
+- [Framework Adapters](#framework-adapters)
+  - [React](#react-page-mcpreact)
+  - [Vue 3](#vue-3-page-mcpvue3)
+  - [Vue 2](#vue-2-page-mcpvue2)
+- [API Reference](#api-reference)
+- [Demo](#demo)
+- [Development](#development)
+- [License](#license)
+
+---
+
 ## Overview
 
 AI Agents increasingly need to understand and interact with web pages. Traditional DOM scraping is fragile and inefficient. **Page MCP SDK** lets pages proactively describe their capabilities to AI through a structured MCP protocol:
@@ -33,6 +59,8 @@ AI Agents increasingly need to understand and interact with web pages. Tradition
 - 📖 **Resources** — Readable data (e.g. "cart contents", "product catalog") — *Beyond WebMCP*
 - 🚀 **Skills** — Multi-step workflows composing multiple tools (e.g. "place order") — *Beyond WebMCP*
 - 💬 **Chat Widget** — Embeddable AI assistant that auto-discovers registered MCP tools
+
+> 🌐 **Live Preview:** [https://page-mcp.org](https://page-mcp.org) — Try the TechMart e-commerce demo with AI assistant
 
 ```
 ┌─────────────────────────────────────────┐
@@ -153,7 +181,7 @@ console.log('Search results:', result);
   // Launch AI Chat Widget — auto-discovers registered tools
   PageMcpChat.init({
     bus,
-    openai: { apiKey: 'sk-xxx', model: 'gpt-4o' },
+    openai: { apiKey: 'sk-xxx', model: 'gpt-5.2' },
     theme: 'dark',
     position: 'bottom-right',
   });
@@ -302,7 +330,7 @@ const widget = init({
   openai: {
     apiKey: 'sk-xxx',
     baseURL: 'https://api.openai.com/v1',          // Any OpenAI-compatible endpoint
-    model: 'gpt-4o',
+    model: 'gpt-5.2',
   },
   theme: 'dark',                                   // 'dark' | 'light' | 'auto'
   position: 'bottom-right',                        // FAB position
@@ -319,7 +347,8 @@ widget.destroy();
 
 ## Framework Adapters
 
-### React (`@page-mcp/react`)
+<details>
+<summary><h3>React (<code>@page-mcp/react</code>)</h3></summary>
 
 Provider component + Hooks following React best practices.
 
@@ -364,7 +393,10 @@ function ProductPage() {
 | `useRegisterResource(def)` | Register resource |
 | `useRegisterSkill(def)` | Register skill |
 
-### Vue 3 (`@page-mcp/vue3`)
+</details>
+
+<details>
+<summary><h3>Vue 3 (<code>@page-mcp/vue3</code>)</h3></summary>
 
 Plugin + Composables.
 
@@ -402,7 +434,10 @@ const client = usePageMcpClient();
 | `useRegisterResource(def)` | Register resource |
 | `useRegisterSkill(def)` | Register skill |
 
-### Vue 2 (`@page-mcp/vue2`)
+</details>
+
+<details>
+<summary><h3>Vue 2 (<code>@page-mcp/vue2</code>)</h3></summary>
 
 Plugin + Mixin, accessible via `this.$pageMcp`.
 
@@ -443,6 +478,8 @@ export default {
 | `pageMcpTools` option | Tools auto-registered on component create |
 | `pageMcpResources` option | Resources auto-registered on component create |
 | `pageMcpSkills` option | Skills auto-registered on component create |
+
+</details>
 
 ## API Reference
 
@@ -514,6 +551,8 @@ client.disconnect();
 | `executeSkill` | Execute a skill workflow | `{ name, args }` |
 
 ## Demo
+
+> 🌐 **Online Preview:** [https://page-mcp.org](https://page-mcp.org)
 
 The project includes a comprehensive e-commerce demo (TechMart) showcasing all SDK capabilities:
 

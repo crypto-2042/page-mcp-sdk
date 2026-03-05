@@ -1,16 +1,18 @@
 # @page-mcp/vue2
 
-Page MCP SDK 的 Vue 2 适配器。提供 Plugin 和 Mixin。
+Vue 2 adapter for the Page MCP SDK. Provides a Plugin and Mixin for easy integration.
 
-## 安装
+> 🌐 **Live Preview:** [https://page-mcp.org](https://page-mcp.org)
+
+## Installation
 
 ```bash
 npm install @page-mcp/core @page-mcp/vue2
 ```
 
-## 使用
+## Quick Start
 
-### 安装 Plugin
+### 1. Install Plugin
 
 ```javascript
 // main.js
@@ -20,60 +22,73 @@ import { PageMcpPlugin } from '@page-mcp/vue2';
 Vue.use(PageMcpPlugin, { name: 'my-app', version: '1.0' });
 ```
 
-### 方式一：通过 `this.$pageMcp`
+### 2. Option A: Component Options (Recommended)
 
-```javascript
-export default {
-  methods: {
-    async init() {
-      // 注册工具
-      this.$pageMcp.host.registerTool({
-        name: 'search',
-        description: '搜索',
-        parameters: { type: 'object', properties: { q: { type: 'string' } } },
-        handler: async (args) => this.doSearch(args.q)
-      });
-
-      // 获取工具列表
-      const tools = await this.$pageMcp.client.listTools();
-    }
-  }
-};
-```
-
-### 方式二：组件选项自动注册（推荐）
+Declare tools, resources, and skills directly in component options. They are auto-registered on `created` and cleaned up on `beforeDestroy`.
 
 ```javascript
 export default {
   pageMcpTools: [
     {
       name: 'getTableData',
-      description: '获取表格数据',
-      parameters: { type: 'object', properties: {} },
-      handler: async () => store.state.tableData
+      description: 'Get current table data',
+      inputSchema: { type: 'object', properties: {} },
+      execute: async function() { return this.tableData; }
     }
   ],
 
   pageMcpResources: [
     {
       uri: 'page://table/data',
-      name: '表格数据',
-      description: '当前展示的表格数据',
+      name: 'Table Data',
+      description: 'Data displayed in the table',
       handler: async () => ({ rows: store.state.tableData })
     }
   ]
 };
 ```
 
+### 2. Option B: Use `this.$pageMcp` Directly
+
+```javascript
+export default {
+  methods: {
+    async init() {
+      // Register a tool
+      this.$pageMcp.host.registerTool({
+        name: 'search',
+        description: 'Search records',
+        inputSchema: { type: 'object', properties: { q: { type: 'string' } } },
+        execute: async (args) => this.doSearch(args.q)
+      });
+
+      // Discover tools from AI side
+      const tools = await this.$pageMcp.client.listTools();
+      console.log('Available tools:', tools);
+    }
+  }
+};
+```
+
 ## API
 
-| API | 描述 |
-|-----|------|
-| `this.$pageMcp.host` | PageMcpHost 实例 |
-| `this.$pageMcp.client` | PageMcpClient 实例 |
-| `this.$pageMcp.bus` | EventBus 实例 |
-| `pageMcpTools` 选项 | 自动注册的工具数组 |
-| `pageMcpResources` 选项 | 自动注册的资源数组 |
-| `pageMcpSkills` 选项 | 自动注册的技能数组 |
+| API | Description |
+|---|---|
+| `this.$pageMcp.host` | `PageMcpHost` instance |
+| `this.$pageMcp.client` | `PageMcpClient` instance |
+| `this.$pageMcp.bus` | `EventBus` instance |
+| `pageMcpTools` option | Array of tools auto-registered on component create |
+| `pageMcpResources` option | Array of resources auto-registered on component create |
+| `pageMcpSkills` option | Array of skills auto-registered on component create |
 
-详细文档请参阅 [主 README](../../README.md#vue-2-page-mcpvue2)。
+## How It Works
+
+- `PageMcpPlugin` creates `EventBus`, `PageMcpHost`, and `PageMcpClient` instances and attaches them to `Vue.prototype.$pageMcp`.
+- A global mixin reads `pageMcpTools`, `pageMcpResources`, and `pageMcpSkills` from component options and registers them during `created`, cleaning up in `beforeDestroy`.
+- The Host is started automatically when the Plugin is installed.
+
+For detailed documentation, see the [main README](../../README.md#vue-2-page-mcpvue2).
+
+## License
+
+MIT
