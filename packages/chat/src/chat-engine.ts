@@ -7,7 +7,7 @@
 // the SDK's browser safety check.
 
 import { PageMcpClient, EventBus } from '@page-mcp/core';
-import type { ToolInfo } from '@page-mcp/core';
+import type { ToolInfo, PromptInfo } from '@page-mcp/core';
 import type {
     ChatConfig,
     ChatMessage,
@@ -31,6 +31,7 @@ export class ChatEngine {
     private messages: ChatMessage[] = [];
     private mcpClient: PageMcpClient | null = null;
     private mcpTools: ToolInfo[] = [];
+    private mcpPrompts: PromptInfo[] = [];
     private model: string;
     private systemPrompt: string;
     private loading = false;
@@ -71,6 +72,11 @@ export class ChatEngine {
             try {
                 await this.mcpClient.connect();
                 this.mcpTools = await this.mcpClient.listTools();
+                try {
+                    this.mcpPrompts = await this.mcpClient.listPrompts();
+                } catch {
+                    this.mcpPrompts = [];
+                }
             } catch {
                 // MCP host may not be available, continue without tools
                 this.mcpTools = [];
@@ -98,6 +104,11 @@ export class ChatEngine {
     /** Get available MCP tools */
     getTools(): ToolInfo[] {
         return [...this.mcpTools];
+    }
+
+    /** Get available prompt shortcuts */
+    getPrompts(): PromptInfo[] {
+        return [...this.mcpPrompts];
     }
 
     /** Check if currently loading */
