@@ -19,6 +19,7 @@ import {
     type ToolDefinition,
     type ResourceDefinition,
     type SkillDefinition,
+    type PromptDefinition,
     type HostInfo,
 } from '@page-mcp/core';
 
@@ -175,6 +176,33 @@ export function useRegisterSkill(definition: SkillDefinition): void {
     }, [host, defRef.current.name]);
 }
 
+/**
+ * Register a Prompt on the Host. Automatically deregisters on unmount.
+ *
+ * ```tsx
+ * useRegisterPrompt({
+ *   name: 'generate-copy',
+ *   title: 'Generate Marketing Copy',
+ *   description: 'Generate marketing copy for current products',
+ *   icon: '✍️',
+ *   prompt: 'Please generate engaging marketing copy for the products on this page.',
+ * });
+ * ```
+ */
+export function useRegisterPrompt(definition: PromptDefinition): void {
+    const host = usePageMcpHost();
+    const defRef = useRef(definition);
+    defRef.current = definition;
+
+    useEffect(() => {
+        try {
+            host.registerPrompt(defRef.current);
+        } catch {
+            // Already registered (e.g., strict mode double-mount)
+        }
+    }, [host, defRef.current.name]);
+}
+
 // ------ Re-exports ------
 
 export {
@@ -191,5 +219,7 @@ export type {
     SkillDefinition,
     SkillInfo,
     SkillResult,
+    PromptDefinition,
+    PromptInfo,
     HostInfo,
 } from '@page-mcp/core';
