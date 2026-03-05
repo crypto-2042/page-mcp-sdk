@@ -8,6 +8,7 @@ import type {
     ResourceInfo,
     SkillInfo,
     SkillResult,
+    PromptInfo,
     HostInfo,
 } from './types.js';
 
@@ -111,6 +112,15 @@ export class PageMcpClient {
         const response = await this.bus.request('executeSkill', { name, args: args ?? {} });
         if (response.error) throw new Error(response.error.message);
         return response.result as SkillResult;
+    }
+
+    // ---- Prompts ----
+
+    async listPrompts(): Promise<PromptInfo[]> {
+        this.ensureConnected();
+        const response = await this.bus.request('listPrompts');
+        if (response.error) throw new Error(response.error.message);
+        return response.result as PromptInfo[];
     }
 
     // ---- Helpers ----
