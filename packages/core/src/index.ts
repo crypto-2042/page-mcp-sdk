@@ -34,6 +34,8 @@ export type {
     SkillDefinition,
     SkillInfo,
     SkillResult,
+    PromptDefinition,
+    PromptInfo,
     RpcRequest,
     RpcResponse,
     RpcMethod,
