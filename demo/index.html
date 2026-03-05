@@ -947,6 +947,10 @@
             <h3>🚀 Skills <span class="cart-badge" id="mcp-skill-cnt" style="background:var(--purple)">0</span></h3>
             <div id="mcp-skills"></div>
           </div>
+          <div class="mcp-section">
+            <h3>💬 Prompts <span class="cart-badge" id="mcp-prompt-cnt" style="background:var(--yellow)">0</span></h3>
+            <div id="mcp-prompts"></div>
+          </div>
         </div>
         <div>
           <div class="mcp-section">
@@ -960,6 +964,7 @@
               <button class="mbtn" onclick="qTest('listTools')">List Tools</button>
               <button class="mbtn" onclick="qTest('listResources')">List Resources</button>
               <button class="mbtn" onclick="qTest('listSkills')">List Skills</button>
+              <button class="mbtn" onclick="qTest('listPrompts')">List Prompts</button>
               <button class="mbtn" onclick="qTest('readCart')">Read Cart</button>
               <button class="mbtn" onclick="qTest('readCatalog')">Read Catalog</button>
             </div>
@@ -1090,6 +1095,39 @@
       ],
     });
 
+    // ---- PROMPTS (AI Quick Actions) ----
+    host.registerPrompt({
+      name: 'recommend-products',
+      title: 'Recommend Products',
+      description: 'Ask AI to recommend popular products',
+      icon: '⭐',
+      prompt: 'Based on the available products, recommend the top 3 best-value products and explain why they are worth buying.',
+    });
+
+    host.registerPrompt({
+      name: 'compare-all',
+      title: 'Compare Products',
+      description: 'Ask AI to compare products',
+      icon: '⚖️',
+      prompt: 'Compare all available products in a table format, listing name, price, stock status, and a brief pros/cons for each.',
+    });
+
+    host.registerPrompt({
+      name: 'deal-finder',
+      title: 'Find Deals',
+      description: 'Find products on sale',
+      icon: '🏷️',
+      prompt: 'Find all products that are currently on sale (have a discounted price) and tell me how much I can save on each one.',
+    });
+
+    host.registerPrompt({
+      name: 'cart-summary',
+      title: 'Summarize Cart',
+      description: 'Get a summary of the current shopping cart',
+      icon: '🛒',
+      prompt: 'Check my current shopping cart and give me a summary. If it is empty, suggest some products I might like.',
+    });
+
     host.start();
 
     // Client
@@ -1180,6 +1218,15 @@
       const skills = [{ nm: 'smartOrder', ds: 'Find → Stock → Cart → Order (auto)' }, { nm: 'compareProducts', ds: 'Compare two products side by side' }];
       document.getElementById('mcp-skills').innerHTML = skills.map(s => `<div class="mcp-item"><span class="nm">${s.nm}</span><div class="ds">${s.ds}</div></div>`).join('');
       document.getElementById('mcp-skill-cnt').textContent = skills.length;
+
+      const prompts = [
+        { nm: 'recommend-products', ds: 'Recommend popular products', icon: '⭐' },
+        { nm: 'compare-all', ds: 'Compare all products in a table', icon: '⚖️' },
+        { nm: 'deal-finder', ds: 'Find sale products', icon: '🏷️' },
+        { nm: 'cart-summary', ds: 'Summarize shopping cart', icon: '🛒' },
+      ];
+      document.getElementById('mcp-prompts').innerHTML = prompts.map(p => `<div class="mcp-item"><span class="nm">${p.icon} ${p.nm}</span><div class="ds">${p.ds}</div></div>`).join('');
+      document.getElementById('mcp-prompt-cnt').textContent = prompts.length;
     }
 
     window.qTest = async (action) => {
@@ -1189,6 +1236,7 @@
         if (action === 'listTools') r = await client.listTools();
         else if (action === 'listResources') r = await client.listResources();
         else if (action === 'listSkills') r = await client.listSkills();
+        else if (action === 'listPrompts') r = await client.listPrompts();
         else if (action === 'readCart') r = await client.readResource('page://cart');
         else if (action === 'readCatalog') r = await client.readResource('page://products');
         area.innerHTML = `<div style="background:var(--bg);border:1px solid var(--bdr);border-radius:8px;padding:8px;margin-top:6px;max-height:180px;overflow:auto"><pre style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--cyan);white-space:pre-wrap">${JSON.stringify(r, null, 2)}</pre></div>`;
