@@ -909,7 +909,7 @@
         <div class="field"><label>API Key</label><input type="password" id="cfg-apikey" placeholder="sk-..."></div>
         <div class="field"><label>Base URL</label><input type="text" id="cfg-baseurl"
             placeholder="https://api.openai.com/v1"></div>
-        <div class="field"><label>Model</label><input type="text" id="cfg-model" value="gpt-4o" placeholder="gpt-4o">
+        <div class="field"><label>Model</label><input type="text" id="cfg-model" value="gpt-5.2" placeholder="gpt-5.2">
         </div>
         <div class="field"><label>Title</label><input type="text" id="cfg-title" value="TechMart Assistant"></div>
         <div class="field"><label>Position</label><select id="cfg-position">
@@ -1197,15 +1197,49 @@
     // ============================================================
     // SETTINGS MODAL
     // ============================================================
-    window.openSettings = () => document.getElementById('settings-modal').classList.add('open');
+    const STORAGE_KEY = 'techmart_ai_settings';
+
+    function loadSavedSettings() {
+      try {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved) return JSON.parse(saved);
+      } catch { }
+      return null;
+    }
+
+    function saveSettings(settings) {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
+      } catch { }
+    }
+
+    window.openSettings = () => {
+      // Restore saved values into form fields
+      const saved = loadSavedSettings();
+      if (saved) {
+        if (saved.apiKey) document.getElementById('cfg-apikey').value = saved.apiKey;
+        if (saved.baseUrl) document.getElementById('cfg-baseurl').value = saved.baseUrl;
+        if (saved.model) document.getElementById('cfg-model').value = saved.model;
+        if (saved.title) document.getElementById('cfg-title').value = saved.title;
+        if (saved.position) document.getElementById('cfg-position').value = saved.position;
+        if (saved.theme) document.getElementById('cfg-theme').value = saved.theme;
+        if (saved.accentColor) document.getElementById('cfg-color').value = saved.accentColor;
+      }
+      document.getElementById('settings-modal').classList.add('open');
+    };
     window.closeSettings = () => document.getElementById('settings-modal').classList.remove('open');
     window.applySettings = () => {
       const apiKey = document.getElementById('cfg-apikey').value, baseUrl = document.getElementById('cfg-baseurl').value, model = document.getElementById('cfg-model').value;
+      const position = document.getElementById('cfg-position').value, theme = document.getElementById('cfg-theme').value, accentColor = document.getElementById('cfg-color').value, title = document.getElementById('cfg-title').value;
+
+      // Persist settings to localStorage
+      saveSettings({ apiKey, baseUrl, model, title, position, theme, accentColor });
+
       const cfg = {
-        bus, position: document.getElementById('cfg-position').value, theme: document.getElementById('cfg-theme').value, accentColor: document.getElementById('cfg-color').value, title: document.getElementById('cfg-title').value,
+        bus, position, theme, accentColor, title,
         welcomeMessage: 'Hi! 👋 I\'m TechMart AI. I can help you find products, check stock, manage your cart, and place orders. Just ask!'
       };
-      if (apiKey) { cfg.openai = { apiKey, model: model || 'gpt-4o' }; if (baseUrl) cfg.openai.baseURL = baseUrl; }
+      if (apiKey) { cfg.openai = { apiKey, model: model || 'gpt-5.2' }; if (baseUrl) cfg.openai.baseURL = baseUrl; }
       if (window._chatWidget) window._chatWidget.destroy();
       window._chatWidget = PageMcpChat.init(cfg); closeSettings(); toast('success', 'AI Chat reinitialized');
     };
@@ -1291,10 +1325,18 @@
       toast('success', 'Connected to MCP Host');
     }).catch(() => { });
 
-    window._chatWidget = PageMcpChat.init({
-      bus, position: 'bottom-right', theme: 'dark', accentColor: '#6366f1', title: 'TechMart AI',
+    // Initialize chat widget with saved settings (if any)
+    const savedCfg = loadSavedSettings();
+    const initChatConfig = {
+      bus, position: savedCfg?.position || 'bottom-right', theme: savedCfg?.theme || 'dark',
+      accentColor: savedCfg?.accentColor || '#6366f1', title: savedCfg?.title || 'TechMart AI',
       welcomeMessage: 'Hi! 👋 I\'m your TechMart AI assistant. I can help you:\n• 🔍 Search & browse products\n• 📦 Check stock availability\n• 🛒 Manage your cart\n• 🚀 Place orders\n\nJust ask me anything!'
-    });
+    };
+    if (savedCfg?.apiKey) {
+      initChatConfig.openai = { apiKey: savedCfg.apiKey, model: savedCfg.model || 'gpt-5.2' };
+      if (savedCfg.baseUrl) initChatConfig.openai.baseURL = savedCfg.baseUrl;
+    }
+    window._chatWidget = PageMcpChat.init(initChatConfig);
   </script>
 </body>
 

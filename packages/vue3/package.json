@@ -1,6 +1,6 @@
 {
     "name": "@page-mcp/vue3",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "description": "Vue 3 adapter for Page MCP SDK — Plugin + Composables",
     "license": "MIT",
     "keywords": [

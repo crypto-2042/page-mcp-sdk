@@ -12,6 +12,7 @@ const ICON_CHAT = `<svg viewBox="0 0 24 24" class="mcp-fab-icon"><path d="M12 2C
 const ICON_CLOSE = `✕`;
 const ICON_SEND = `<svg viewBox="0 0 24 24" class="mcp-send-icon"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>`;
 const ICON_TOOL = `<svg viewBox="0 0 24 24" class="mcp-tool-icon"><path d="M22.7 19l-9.1-9.1c.9-2.3.4-5-1.5-6.9-2-2-5-2.4-7.4-1.3L9 6 6 9 1.6 4.7C.4 7.1.9 10.1 2.9 12.1c1.9 1.9 4.6 2.4 6.9 1.5l9.1 9.1c.4.4 1 .4 1.4 0l2.3-2.3c.5-.4.5-1.1.1-1.4z"/></svg>`;
+const ICON_CLEAR = `<svg viewBox="0 0 24 24" class="mcp-clear-icon"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>`;
 
 /**
  * ChatWidget renders the complete chat interface inside Shadow DOM.
@@ -22,6 +23,8 @@ export class ChatWidget {
     private engine: ChatEngine;
     private config: Required<Pick<ChatConfig, 'position' | 'expandMode' | 'theme' | 'accentColor' | 'title' | 'placeholder' | 'width' | 'height'>> & ChatConfig;
     private isOpen = false;
+    /** Max number of prompt shortcut cards to display */
+    private maxPrompts = 3;
 
     // DOM references
     private fab!: HTMLButtonElement;
@@ -115,7 +118,10 @@ export class ChatWidget {
                     <div class="mcp-header-dot"></div>
                     <span class="mcp-header-title">${this.escapeHtml(this.config.title)}</span>
                 </div>
-                <button class="mcp-close-btn" aria-label="Close chat">${ICON_CLOSE}</button>
+                <div class="mcp-header-actions">
+                    <button class="mcp-clear-btn" aria-label="Clear chat" title="Clear chat">${ICON_CLEAR}</button>
+                    <button class="mcp-close-btn" aria-label="Close chat">${ICON_CLOSE}</button>
+                </div>
             </div>
             <div class="mcp-messages"></div>
             <div class="mcp-loading" style="display:none">
@@ -137,6 +143,7 @@ export class ChatWidget {
 
         // Bind events
         this.panel.querySelector('.mcp-close-btn')!.addEventListener('click', () => this.close());
+        this.panel.querySelector('.mcp-clear-btn')!.addEventListener('click', () => this.clearChat());
         this.sendBtn.addEventListener('click', () => this.handleSend());
         this.input.addEventListener('keydown', (e: KeyboardEvent) => {
             if (e.key === 'Enter' && !e.shiftKey) {
@@ -165,10 +172,18 @@ export class ChatWidget {
         const prompts = this.engine.getPrompts();
         if (prompts.length === 0) return;
 
+        // Remove existing prompts container if any
+        if (this.promptsContainer) {
+            this.promptsContainer.remove();
+        }
+
         this.promptsContainer = document.createElement('div');
         this.promptsContainer.className = 'mcp-prompts';
 
-        for (const prompt of prompts) {
+        // Limit the number of displayed prompt cards
+        const displayPrompts = prompts.slice(0, this.maxPrompts);
+
+        for (const prompt of displayPrompts) {
             const card = document.createElement('button');
             card.className = 'mcp-prompt-card';
             card.innerHTML = `${prompt.icon ? `<span class="mcp-prompt-icon">${this.escapeHtml(prompt.icon)}</span>` : ''}${this.escapeHtml(prompt.title)}`;
@@ -318,6 +333,13 @@ export class ChatWidget {
         this.input.value = '';
         this.hidePromptCards();
         await this.engine.sendMessage(content);
+    }
+
+    /** Clear all chat messages and re-show prompt cards */
+    clearChat(): void {
+        this.engine.clearMessages();
+        this.messagesContainer.innerHTML = '';
+        this.renderPromptCards();
     }
 
     /** Open the chat panel */

@@ -1,16 +1,18 @@
 # @page-mcp/react
 
-Page MCP SDK 的 React 适配器。提供 Provider 组件和 Hooks。
+React adapter for the Page MCP SDK. Provides a Provider component and Hooks for seamless integration.
 
-## 安装
+> 🌐 **Live Preview:** [https://page-mcp.org](https://page-mcp.org)
+
+## Installation
 
 ```bash
 npm install @page-mcp/core @page-mcp/react
 ```
 
-## 使用
+## Quick Start
 
-### 1. 包裹 Provider
+### 1. Wrap Your App with Provider
 
 ```tsx
 import { PageMcpProvider } from '@page-mcp/react';
@@ -24,24 +26,35 @@ function App() {
 }
 ```
 
-### 2. 注册工具
+### 2. Register Tools in Components
 
 ```tsx
-import { useRegisterTool } from '@page-mcp/react';
+import { useRegisterTool, useRegisterResource } from '@page-mcp/react';
 
-function MyPage() {
+function ProductPage() {
   useRegisterTool({
-    name: 'getData',
-    description: '获取页面数据',
-    parameters: { type: 'object', properties: {} },
-    handler: async () => ({ data: 'hello' })
+    name: 'searchProducts',
+    description: 'Search the product catalog',
+    inputSchema: {
+      type: 'object',
+      properties: { keyword: { type: 'string' } },
+      required: ['keyword']
+    },
+    execute: async (input) => products.filter(p => p.name.includes(input.keyword)),
   });
 
-  return <div>My Page</div>;
+  useRegisterResource({
+    uri: 'page://products',
+    name: 'Product List',
+    description: 'All products on this page',
+    handler: async () => ({ products })
+  });
+
+  return <div>{/* UI */}</div>;
 }
 ```
 
-### 3. AI 组件调用
+### 3. Use Client for AI Integration
 
 ```tsx
 import { usePageMcpClient } from '@page-mcp/react';
@@ -51,7 +64,7 @@ function AIWidget() {
 
   const handleClick = async () => {
     const tools = await client.listTools();
-    const result = await client.callTool('getData', {});
+    const result = await client.callTool('searchProducts', { keyword: 'headphones' });
     console.log(result);
   };
 
@@ -61,13 +74,23 @@ function AIWidget() {
 
 ## API
 
-| Hook | 描述 |
-|------|------|
-| `usePageMcpHost()` | 获取 Host 实例 |
-| `usePageMcpClient()` | 获取 Client 实例 |
-| `usePageMcpBus()` | 获取 EventBus |
-| `useRegisterTool(def)` | 注册工具 |
-| `useRegisterResource(def)` | 注册资源 |
-| `useRegisterSkill(def)` | 注册技能 |
+| Hook | Description |
+|---|---|
+| `usePageMcpHost()` | Get the `PageMcpHost` instance |
+| `usePageMcpClient()` | Get the `PageMcpClient` instance |
+| `usePageMcpBus()` | Get the `EventBus` instance |
+| `useRegisterTool(def)` | Register a tool (auto-cleanup on unmount) |
+| `useRegisterResource(def)` | Register a resource (auto-cleanup on unmount) |
+| `useRegisterSkill(def)` | Register a skill (auto-cleanup on unmount) |
 
-详细文档请参阅 [主 README](../../README.md#react-page-mcpreact)。
+## How It Works
+
+- `PageMcpProvider` creates `EventBus`, `PageMcpHost`, and `PageMcpClient` instances and provides them via React Context.
+- `useRegisterTool` / `useRegisterResource` / `useRegisterSkill` register capabilities on mount and automatically clean up on unmount.
+- The Host is started automatically when the Provider mounts.
+
+For detailed documentation, see the [main README](../../README.md#react-page-mcpreact).
+
+## License
+
+MIT

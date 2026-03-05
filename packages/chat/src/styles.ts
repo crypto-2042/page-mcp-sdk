@@ -219,6 +219,40 @@ export function generateStyles(theme: ChatTheme, accentColor: string): string {
             color: var(--mcp-text-primary);
         }
 
+        .mcp-header-actions {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .mcp-clear-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: var(--mcp-radius-sm);
+            border: none;
+            background: var(--mcp-bg-glass);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            color: var(--mcp-text-secondary);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all var(--mcp-transition);
+            font-size: 16px;
+        }
+
+        .mcp-clear-btn:hover {
+            background: var(--mcp-bg-glass-hover);
+            color: var(--mcp-text-primary);
+        }
+
+        .mcp-clear-icon {
+            width: 16px;
+            height: 16px;
+            fill: currentColor;
+        }
+
         /* ====== Messages ====== */
         .mcp-messages {
             flex: 1;
@@ -327,6 +361,67 @@ export function generateStyles(theme: ChatTheme, accentColor: string): string {
         }
 
         .mcp-code-block code {
+            color: var(--mcp-text-primary);
+        }
+
+        /* ====== Markdown Tables ====== */
+        .mcp-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 8px 0;
+            font-size: 13px;
+            border-radius: var(--mcp-radius-sm);
+            overflow: hidden;
+            border: 1px solid var(--mcp-border);
+        }
+
+        .mcp-table th,
+        .mcp-table td {
+            padding: 8px 12px;
+            text-align: left;
+            border-bottom: 1px solid var(--mcp-border-light);
+        }
+
+        .mcp-table th {
+            background: var(--mcp-bg-glass);
+            font-weight: 600;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+            color: var(--mcp-text-secondary);
+        }
+
+        .mcp-table tbody tr:nth-child(even) {
+            background: var(--mcp-bg-glass);
+        }
+
+        .mcp-table tbody tr:hover {
+            background: var(--mcp-bg-glass-hover);
+        }
+
+        .mcp-table td {
+            color: var(--mcp-text-primary);
+        }
+
+        /* ====== Headings ====== */
+        .mcp-heading {
+            margin: 8px 0 4px;
+            font-weight: 600;
+            color: var(--mcp-text-primary);
+        }
+
+        h2.mcp-heading { font-size: 17px; }
+        h3.mcp-heading { font-size: 15px; }
+        h4.mcp-heading { font-size: 14px; }
+
+        /* ====== Lists ====== */
+        .mcp-list {
+            margin: 6px 0;
+            padding-left: 20px;
+        }
+
+        .mcp-list-item {
+            margin: 2px 0;
             color: var(--mcp-text-primary);
         }
 
