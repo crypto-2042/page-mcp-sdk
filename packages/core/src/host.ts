@@ -11,6 +11,8 @@ import type {
     ResourceInfo,
     SkillDefinition,
     SkillInfo,
+    PromptDefinition,
+    PromptInfo,
     HostInfo,
     RpcRequest,
     RpcResponse,
@@ -32,6 +34,7 @@ export class PageMcpHost {
     private readonly tools = new Map<string, ToolDefinition>();
     private readonly resources = new Map<string, ResourceDefinition>();
     private readonly skills = new Map<string, SkillDefinition>();
+    private readonly prompts = new Map<string, PromptDefinition>();
     private readonly skillRunner = new SkillRunner();
 
     constructor(options: PageMcpHostOptions) {
@@ -68,6 +71,14 @@ export class PageMcpHost {
         }
         // Validate that all referenced tools exist or will exist
         this.skills.set(def.name, def);
+        return this;
+    }
+
+    registerPrompt(def: PromptDefinition): this {
+        if (this.prompts.has(def.name)) {
+            throw new Error(`Prompt "${def.name}" is already registered`);
+        }
+        this.prompts.set(def.name, def);
         return this;
     }
 
@@ -120,6 +131,9 @@ export class PageMcpHost {
                     return { id: req.id, result };
                 }
 
+                case 'listPrompts':
+                    return { id: req.id, result: this.getPromptInfoList() };
+
                 default:
                     return {
                         id: req.id,
@@ -162,6 +176,16 @@ export class PageMcpHost {
             description,
             inputSchema,
             steps: steps.map((s) => s.name),
+        }));
+    }
+
+    private getPromptInfoList(): PromptInfo[] {
+        return Array.from(this.prompts.values()).map(({ name, title, description, icon, prompt }) => ({
+            name,
+            title,
+            description,
+            icon,
+            prompt,
         }));
     }
 
