@@ -22,6 +22,13 @@ export {
 } from './polyfill.js';
 export type { WebMcpTool, ModelContext } from './polyfill.js';
 
+// Transport implementations
+export { PostMessageTransport } from './transports/postmessage.js';
+export type { PostMessageTransportOptions } from './transports/postmessage.js';
+
+export { ChromeRuntimeTransport } from './transports/chrome-runtime.js';
+export type { ChromeRuntimeTransportOptions } from './transports/chrome-runtime.js';
+
 // Types
 export type {
     JsonSchema,
@@ -40,4 +47,5 @@ export type {
     RpcResponse,
     RpcMethod,
     HostInfo,
+    ITransport,
 } from './types.js';

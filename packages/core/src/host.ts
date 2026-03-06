@@ -16,12 +16,16 @@ import type {
     HostInfo,
     RpcRequest,
     RpcResponse,
+    ITransport,
 } from './types.js';
 
 export interface PageMcpHostOptions {
     name: string;
     version: string;
+    /** @deprecated Use `transport` instead. Kept for backward compatibility. */
     bus?: EventBus;
+    /** Transport layer for Host ↔ Client communication */
+    transport?: ITransport;
 }
 
 /**
@@ -30,7 +34,7 @@ export interface PageMcpHostOptions {
  */
 export class PageMcpHost {
     private readonly info: HostInfo;
-    private readonly bus: EventBus;
+    private readonly transport: ITransport;
     private readonly tools = new Map<string, ToolDefinition>();
     private readonly resources = new Map<string, ResourceDefinition>();
     private readonly skills = new Map<string, SkillDefinition>();
@@ -39,12 +43,27 @@ export class PageMcpHost {
 
     constructor(options: PageMcpHostOptions) {
         this.info = { name: options.name, version: options.version };
-        this.bus = options.bus ?? new EventBus();
+        this.transport = options.transport ?? options.bus ?? new EventBus();
     }
 
-    /** Get the shared EventBus (pass to PageMcpClient for same-context usage) */
+    /**
+     * Get the transport instance.
+     * If the transport is an EventBus, you can pass it directly to PageMcpClient
+     * for same-context usage.
+     */
+    getTransport(): ITransport {
+        return this.transport;
+    }
+
+    /** @deprecated Use getTransport() instead */
     getBus(): EventBus {
-        return this.bus;
+        if (this.transport instanceof EventBus) {
+            return this.transport;
+        }
+        throw new Error(
+            'getBus() is only available when using EventBus transport. ' +
+            'Use getTransport() instead for generic transport access.'
+        );
     }
 
     // ---- Registration ----
@@ -85,12 +104,25 @@ export class PageMcpHost {
     // ---- Start listening ----
 
     start(): void {
-        this.bus.onRequest(async (request: RpcRequest): Promise<RpcResponse> => {
+        this.transport.onRequest(async (request: RpcRequest): Promise<RpcResponse> => {
             return this.handleRequest(request);
         });
 
         // Broadcast readiness
-        this.bus.emit('host:ready', this.info);
+        this.transport.emit('host:ready', this.info);
+
+        // Expose host globally for browser extension bridge discovery
+        if (typeof window !== 'undefined') {
+            const w = window as unknown as Record<string, unknown>;
+            if (!Array.isArray(w.__pageMcpHosts)) {
+                w.__pageMcpHosts = [];
+            }
+            (w.__pageMcpHosts as PageMcpHost[]).push(this);
+
+            window.dispatchEvent(new CustomEvent('page-mcp:host-ready', {
+                detail: { hostInfo: this.info, transport: this.transport },
+            }));
+        }
     }
 
     // ---- RPC Handler ----
@@ -223,6 +255,15 @@ export class PageMcpHost {
 
     /** Stop listening and clean up */
     destroy(): void {
-        this.bus.destroy();
+        // Remove from global registry
+        if (typeof window !== 'undefined') {
+            const w = window as unknown as Record<string, unknown>;
+            const hosts = w.__pageMcpHosts as PageMcpHost[] | undefined;
+            if (Array.isArray(hosts)) {
+                const idx = hosts.indexOf(this);
+                if (idx >= 0) hosts.splice(idx, 1);
+            }
+        }
+        this.transport.destroy();
     }
 }

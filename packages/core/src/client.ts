@@ -10,10 +10,14 @@ import type {
     SkillResult,
     PromptInfo,
     HostInfo,
+    ITransport,
 } from './types.js';
 
 export interface PageMcpClientOptions {
+    /** @deprecated Use `transport` instead. Kept for backward compatibility. */
     bus?: EventBus;
+    /** Transport layer for Host ↔ Client communication */
+    transport?: ITransport;
     /** Connection timeout in ms (default 5000) */
     connectTimeout?: number;
 }
@@ -22,19 +26,32 @@ export interface PageMcpClientOptions {
  * AI-side Client that discovers and invokes page capabilities.
  */
 export class PageMcpClient {
-    private readonly bus: EventBus;
+    private readonly transport: ITransport;
     private readonly connectTimeout: number;
     private hostInfo: HostInfo | null = null;
     private connected = false;
 
     constructor(options?: PageMcpClientOptions) {
-        this.bus = options?.bus ?? new EventBus();
+        this.transport = options?.transport ?? options?.bus ?? new EventBus();
         this.connectTimeout = options?.connectTimeout ?? 5_000;
     }
 
-    /** Get the shared EventBus */
+    /**
+     * Get the transport instance.
+     */
+    getTransport(): ITransport {
+        return this.transport;
+    }
+
+    /** @deprecated Use getTransport() instead */
     getBus(): EventBus {
-        return this.bus;
+        if (this.transport instanceof EventBus) {
+            return this.transport;
+        }
+        throw new Error(
+            'getBus() is only available when using EventBus transport. ' +
+            'Use getTransport() instead for generic transport access.'
+        );
     }
 
     /**
@@ -46,7 +63,7 @@ export class PageMcpClient {
         }
 
         // Try to ping the host
-        const response = await this.bus.request('getHostInfo');
+        const response = await this.transport.request('getHostInfo');
         if (response.error) {
             throw new Error(`Connection failed: ${response.error.message}`);
         }
@@ -70,14 +87,14 @@ export class PageMcpClient {
 
     async listTools(): Promise<ToolInfo[]> {
         this.ensureConnected();
-        const response = await this.bus.request('listTools');
+        const response = await this.transport.request('listTools');
         if (response.error) throw new Error(response.error.message);
         return response.result as ToolInfo[];
     }
 
     async callTool(name: string, args?: Record<string, unknown>): Promise<unknown> {
         this.ensureConnected();
-        const response = await this.bus.request('callTool', { name, args: args ?? {} });
+        const response = await this.transport.request('callTool', { name, args: args ?? {} });
         if (response.error) throw new Error(response.error.message);
         return response.result;
     }
@@ -86,14 +103,14 @@ export class PageMcpClient {
 
     async listResources(): Promise<ResourceInfo[]> {
         this.ensureConnected();
-        const response = await this.bus.request('listResources');
+        const response = await this.transport.request('listResources');
         if (response.error) throw new Error(response.error.message);
         return response.result as ResourceInfo[];
     }
 
     async readResource(uri: string): Promise<unknown> {
         this.ensureConnected();
-        const response = await this.bus.request('readResource', { uri });
+        const response = await this.transport.request('readResource', { uri });
         if (response.error) throw new Error(response.error.message);
         return response.result;
     }
@@ -102,14 +119,14 @@ export class PageMcpClient {
 
     async listSkills(): Promise<SkillInfo[]> {
         this.ensureConnected();
-        const response = await this.bus.request('listSkills');
+        const response = await this.transport.request('listSkills');
         if (response.error) throw new Error(response.error.message);
         return response.result as SkillInfo[];
     }
 
     async executeSkill(name: string, args?: Record<string, unknown>): Promise<SkillResult> {
         this.ensureConnected();
-        const response = await this.bus.request('executeSkill', { name, args: args ?? {} });
+        const response = await this.transport.request('executeSkill', { name, args: args ?? {} });
         if (response.error) throw new Error(response.error.message);
         return response.result as SkillResult;
     }
@@ -118,7 +135,7 @@ export class PageMcpClient {
 
     async listPrompts(): Promise<PromptInfo[]> {
         this.ensureConnected();
-        const response = await this.bus.request('listPrompts');
+        const response = await this.transport.request('listPrompts');
         if (response.error) throw new Error(response.error.message);
         return response.result as PromptInfo[];
     }
