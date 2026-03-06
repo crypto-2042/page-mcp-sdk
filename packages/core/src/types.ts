@@ -124,6 +124,39 @@ export interface PromptInfo {
     prompt: string;
 }
 
+// ------ Transport Interface ------
+
+type TransportListener = (data: unknown) => void;
+type TransportRpcHandler = (request: RpcRequest) => Promise<RpcResponse>;
+
+/**
+ * Abstract transport interface for Host ↔ Client communication.
+ *
+ * Implementations:
+ * - `EventBus`               — In-memory (same JS context)
+ * - `PostMessageTransport`   — window.postMessage (Content Script ↔ Page)
+ * - `ChromeRuntimeTransport` — chrome.runtime messaging (Extension ↔ Content Script)
+ */
+export interface ITransport {
+    /** Send an RPC request and wait for a response (Client side) */
+    request(method: RpcMethod, params?: Record<string, unknown>): Promise<RpcResponse>;
+
+    /** Register a handler for incoming RPC requests (Host side) */
+    onRequest(handler: TransportRpcHandler): void;
+
+    /** Subscribe to a named event */
+    on(event: string, callback: TransportListener): void;
+
+    /** Unsubscribe from a named event */
+    off(event: string, callback: TransportListener): void;
+
+    /** Emit a named event */
+    emit(event: string, data?: unknown): void;
+
+    /** Clean up all listeners and pending requests */
+    destroy(): void;
+}
+
 // ------ RPC Messages ------
 
 export type RpcMethod =
