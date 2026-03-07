@@ -1203,7 +1203,26 @@ Run a read-only verification for tools/resources/prompts calls from a skill cont
 
     // Client
     const client = new PageMcpCore.PageMcpClient({ bus });
-    const skillsClient = PageMcpCore.Extensions.createSkillsClient(client);
+    function createCompatibleSkillsClient(c) {
+      const v2Factory = PageMcpCore?.Extensions?.createSkillsClient;
+      const legacyFactory = PageMcpCore?.createSkillsClient;
+      const factory = typeof v2Factory === 'function'
+        ? v2Factory
+        : typeof legacyFactory === 'function'
+          ? legacyFactory
+          : null;
+      if (!factory) {
+        console.warn('[Demo] Skills extension is unavailable in current @page-mcp/core bundle.');
+        return {
+          list: async () => [],
+          execute: async () => {
+            throw new Error('Skills extension unavailable. Please hard refresh or update @page-mcp/core bundle.');
+          },
+        };
+      }
+      return factory(c);
+    }
+    const skillsClient = createCompatibleSkillsClient(client);
     bus.on('rpc:request', d => rpcLog('req', d.method, d.params));
     bus.on('rpc:response', d => d.error ? rpcLog('err', 'ERROR', d.error) : rpcLog('res', 'RESULT', d.result));
 
