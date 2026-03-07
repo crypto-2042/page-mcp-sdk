@@ -186,11 +186,11 @@ export class ChatWidget {
         for (const prompt of displayPrompts) {
             const card = document.createElement('button');
             card.className = 'mcp-prompt-card';
-            card.innerHTML = `${prompt.icon ? `<span class="mcp-prompt-icon">${this.escapeHtml(prompt.icon)}</span>` : ''}${this.escapeHtml(prompt.title)}`;
+            card.innerHTML = this.escapeHtml(prompt.name);
             card.setAttribute('title', prompt.description);
             card.addEventListener('click', () => {
                 this.hidePromptCards();
-                this.engine.sendMessage(prompt.prompt);
+                this.engine.sendMessage(prompt.description);
             });
             this.promptsContainer.appendChild(card);
         }

@@ -76,6 +76,7 @@ export default {
 |---|---|
 | `this.$pageMcp.host` | `PageMcpHost` instance |
 | `this.$pageMcp.client` | `PageMcpClient` instance |
+| `this.$pageMcp.skills` | Extensions skills client |
 | `this.$pageMcp.bus` | `EventBus` instance |
 | `pageMcpTools` option | Array of tools auto-registered on component create |
 | `pageMcpResources` option | Array of resources auto-registered on component create |
@@ -84,7 +85,7 @@ export default {
 ## How It Works
 
 - `PageMcpPlugin` creates `EventBus`, `PageMcpHost`, and `PageMcpClient` instances and attaches them to `Vue.prototype.$pageMcp`.
-- A global mixin reads `pageMcpTools`, `pageMcpResources`, and `pageMcpSkills` from component options and registers them during `created`, cleaning up in `beforeDestroy`.
+- A global mixin reads `pageMcpTools`, `pageMcpResources`, `pageMcpSkills`, and `pageMcpPrompts` from component options and registers them during `created`, cleaning up in `beforeDestroy`.
 - The Host is started automatically when the Plugin is installed.
 
 For detailed documentation, see the [main README](../../README.md#vue-2-page-mcpvue2).
