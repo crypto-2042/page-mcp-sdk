@@ -3,7 +3,7 @@
 </p>
 
 <p align="center">
-  <strong>WebMCP Polyfill & Enhancement — Let web pages explain themselves to AI via the MCP protocol</strong>
+  <strong>MCP-Aligned Web Page SDK — Let web pages explain themselves to AI via standardized tools, resources, prompts, and skills extensions</strong>
 </p>
 
 <p align="center">
@@ -38,7 +38,7 @@
   - [Tools — WebMCP Aligned](#tools--webmcp-aligned)
   - [Resources — Beyond WebMCP](#resources--beyond-webmcp)
   - [Skills — Beyond WebMCP](#skills--beyond-webmcp)
-  - [WebMCP Polyfill](#webmcp-polyfill)
+  - [WebMCP Adapter](#webmcp-adapter)
   - [Chat Widget](#chat-widget)
 - [Framework Adapters](#framework-adapters)
   - [React](#react-page-mcpreact)
@@ -84,24 +84,25 @@ AI Agents increasingly need to understand and interact with web pages. Tradition
 
 [WebMCP](https://github.com/niccolli/niccolli.github.io) is a W3C proposed standard by Google and Microsoft that enables pages to expose tools to AI agents via `navigator.modelContext.registerTool()`.
 
-**This SDK is a WebMCP Polyfill + Enhancement:**
+**This SDK is an MCP-aligned runtime + WebMCP browser adapter:**
 
 | Capability | WebMCP Standard | This SDK |
 |---|---|---|
-| `registerTool()` | ✅ Browser native (Chrome Canary only) | ✅ Polyfill — works in all browsers |
+| `registerTool()` | ✅ Browser native (limited availability) | ✅ Via `@page-mcp/webmcp-adapter` polyfill |
 | `inputSchema` / `execute` | ✅ Standard fields | ✅ Fully aligned |
 | `annotations.readOnlyHint` | ✅ Standard fields | ✅ Fully aligned |
 | **Resources** | ❌ Not supported | ✅ `registerResource()` |
 | **Skills (Workflows)** | ❌ Not supported | ✅ `registerSkill()` |
 | **Chat Widget** | ❌ Not supported | ✅ `@page-mcp/chat` |
 | **Framework Adapters** | ❌ Native JS only | ✅ React / Vue 3 / Vue 2 |
-| **Auto-detection** | — | ✅ Uses native when available, polyfill otherwise |
+| **Auto-detection** | — | ✅ Uses native when available, adapter polyfills otherwise |
 
 ## Packages
 
 | Package | Description | Size |
 |---|---|---|
-| [`@page-mcp/core`](./packages/core) | Core SDK — Host, Client, EventBus, WebMCP Polyfill, SkillRunner | ~13 KB |
+| [`@page-mcp/core`](./packages/core) | Core SDK — Host, Client, EventBus, Transports, MCP + Skills Extension APIs | ~13 KB |
+| [`@page-mcp/webmcp-adapter`](./packages/webmcp-adapter) | Browser WebMCP adapter (polyfill + bridge to PageMcpHost) | ~3 KB |
 | [`@page-mcp/chat`](./packages/chat) | Embeddable AI Chat Widget with OpenAI-compatible API + MCP | ~38 KB |
 | [`@page-mcp/react`](./packages/react) | React adapter — Provider + Hooks | ~3 KB |
 | [`@page-mcp/vue3`](./packages/vue3) | Vue 3 adapter — Plugin + Composables | ~3 KB |
@@ -163,10 +164,10 @@ installWebMcpPolyfill(host);
 const client = new PageMcpClient({ bus });
 await client.connect();
 
-const tools = await client.listTools();
+const tools = await client.toolsList();
 console.log('Available tools:', tools);
 
-const result = await client.callTool('searchProducts', { keyword: 'headphones' });
+const result = await client.toolsCall('searchProducts', { keyword: 'headphones' });
 console.log('Search results:', result);
 ```
 
@@ -246,63 +247,40 @@ host.registerResource({
 });
 
 // AI side
-const cart = await client.readResource('page://cart/items');
+const cart = await client.resourcesRead('page://cart/items');
 // => { items: [...], total: 299.97 }
 ```
 
 ### Skills — Beyond WebMCP
 
-Skills are **multi-step workflows** orchestrating multiple tools. Each step can reference a registered tool, with data passing between steps and conditional validation.
+Skills are extension capabilities exposed through `extensions/skills/*` RPC methods. A skill must provide `name`, `version`, `skillMd`, and runtime logic (`run` or optional `scriptJs`).
 
 ```typescript
+import { Extensions } from '@page-mcp/core';
+
 host.registerSkill({
-  name: 'smartOrder',
-  description: 'Smart order: find product → check stock → add to cart → place order',
-  inputSchema: {
-    type: 'object',
-    properties: {
-      productName: { type: 'string' },
-      quantity: { type: 'number' }
-    },
-    required: ['productName']
-  },
-  steps: [
-    {
-      name: 'findProduct',
-      tool: 'getProductInfo',
-      input: (args) => ({ productName: args.productName }),
-      validate: (result) => !!(result as any).name,
-      onFail: { error: 'Product not found' }
-    },
-    {
-      name: 'verifyStock',
-      tool: 'checkStock',
-      input: (args) => ({ productName: args.productName }),
-      validate: (result, args) => (result as any).stock >= Number(args.quantity || 1),
-      onFail: { error: 'Insufficient stock' }
-    },
-    {
-      name: 'addItem',
-      tool: 'addToCart',
-      input: (args, prev) => ({
-        productName: (prev.findProduct as any).name,
-        quantity: args.quantity || 1
-      })
-    },
-    {
-      name: 'checkout',
-      tool: 'placeOrder',
-      input: () => ({})
-    }
-  ]
+  name: 'cart-checkout',
+  version: '1.0.0',
+  description: 'Checkout flow for current cart',
+  skillMd: '# cart-checkout\nCollect payment and submit order.',
+  run: async (ctx, input) => {
+    await ctx.callTool('addToCart', input);
+    return ctx.callTool('placeOrder', {});
+  }
 });
 
-// Skill orchestration is available via Extensions namespace
-// import { Extensions } from '@page-mcp/core';
-// const runner = Extensions.createSkillRunner();
+const skills = Extensions.createSkillsClient(client);
+await skills.list();
+await skills.get('cart-checkout');
+await skills.execute('cart-checkout', { productId: 'p1', quantity: 1 });
 ```
 
-### WebMCP Polyfill
+`scriptJs` notes:
+- Registering `scriptJs` text is supported.
+- Inline JS execution is disabled by default.
+- Enable explicitly via `new PageMcpHost({ skills: { allowInlineScriptExecution: true } })`.
+
+### WebMCP Adapter
 
 ```typescript
 import { installWebMcpPolyfill, isWebMcpSupported } from '@page-mcp/webmcp-adapter';
@@ -504,14 +482,16 @@ bus.destroy();
 Page-side host that registers Tools / Resources / Skills and handles AI requests.
 
 ```typescript
+const bus = new EventBus();
 const host = new PageMcpHost({ name: 'app', version: '1.0', bus });
 
 host.registerTool(toolDef);       // Register tool (WebMCP aligned)
 host.registerResource(resDef);    // Register resource
-host.registerSkill(skillDef);     // Register skill
+host.registerPrompt(promptDef);   // Register prompt
+host.registerSkill(skillDef);     // Register extension skill
 
 host.start();                     // Start listening for RPC requests
-host.getBus();                    // Get EventBus instance
+host.getTransport();              // Get transport instance
 host.destroy();                   // Stop listening and cleanup
 ```
 
@@ -520,23 +500,32 @@ host.destroy();                   // Stop listening and cleanup
 AI-side client that discovers and invokes page capabilities.
 
 ```typescript
+import { Extensions } from '@page-mcp/core';
+
+const bus = new EventBus();
 const client = new PageMcpClient({ bus, connectTimeout: 5000 });
 
 await client.connect();
+await client.initialize();
 client.isConnected();
 client.getHostInfo();
 
 // Tools
-await client.listTools();
-await client.callTool(name, args);
+await client.toolsList();
+await client.toolsCall(name, args);
 
 // Resources
-await client.listResources();
-await client.readResource(uri);
+await client.resourcesList();
+await client.resourcesRead(uri);
 
 // Prompts
-await client.listPrompts();
-await client.getPrompt(name, args);
+await client.promptsList();
+await client.promptsGet(name, args);
+
+// Skills extensions
+const skills = Extensions.createSkillsClient(client);
+await skills.list();
+await skills.execute(name, args);
 
 client.disconnect();
 ```
@@ -545,14 +534,18 @@ client.disconnect();
 
 | Method | Description | Params |
 |---|---|---|
-| `ping` | Heartbeat | — |
-| `getHostInfo` | Get host info (name, version) | — |
+| `initialize` | MCP handshake (protocol/capabilities/serverInfo) | `{ protocolVersion, capabilities, clientInfo }` |
 | `tools/list` | List registered tools (RPC method) | `{ cursor?, limit? }` |
 | `tools/call` | Invoke a tool (RPC method) | `{ name, arguments }` |
 | `resources/list` | List registered resources (RPC method) | `{ cursor?, limit? }` |
 | `resources/read` | Read a resource (RPC method) | `{ uri }` |
 | `prompts/list` | List prompts (RPC method) | `{ cursor?, limit? }` |
 | `prompts/get` | Resolve a prompt template (RPC method) | `{ name, arguments }` |
+| `extensions/skills/list` | List registered skills (extension) | `{ cursor?, limit? }` |
+| `extensions/skills/get` | Get skill detail (`skillMd`, metadata) | `{ name }` |
+| `extensions/skills/execute` | Execute skill via `run` or `scriptJs` | `{ name, arguments }` |
+
+Legacy compatibility methods `ping`, `getHostInfo`, `listTools`, `callTool`, `listResources`, `readResource`, `listPrompts` are still accepted in non-strict mode for migration.
 
 ## Demo
 
@@ -602,12 +595,13 @@ page-mcp-sdk/
 │   ├── core/               # @page-mcp/core
 │   │   └── src/
 │   │       ├── types.ts        # Shared types (WebMCP aligned)
+│   │       ├── mcp-types.ts    # MCP-native method/type surface
 │   │       ├── transport.ts    # EventBus communication layer
 │   │       ├── host.ts         # PageMcpHost
 │   │       ├── client.ts       # PageMcpClient
-│   │       ├── polyfill.ts     # WebMCP Polyfill
-│   │       ├── skill-runner.ts # Skill execution engine
+│   │       ├── extensions/     # Skills extension client/types
 │   │       └── index.ts        # Public exports
+│   ├── webmcp-adapter/     # @page-mcp/webmcp-adapter
 │   ├── chat/               # @page-mcp/chat
 │   │   └── src/
 │   │       ├── chat-engine.ts  # AI chat engine (fetch-based)
@@ -628,7 +622,7 @@ page-mcp-sdk/
 
 1. **WebMCP Aligned** — Tool API is fully compatible with the W3C WebMCP standard
 2. **Beyond the Standard** — Resources + Skills provide capabilities beyond WebMCP
-3. **Auto-Detection** — Uses native browser WebMCP when available, polyfills otherwise
+3. **Native-First WebMCP** — Uses native browser WebMCP when available, adapter polyfills otherwise
 4. **Framework Agnostic Core** — Core logic is not tied to any framework
 5. **Zero Runtime Dependencies** — Core SDK has no third-party dependencies
 6. **Pluggable Transport** — Communication layer is replaceable

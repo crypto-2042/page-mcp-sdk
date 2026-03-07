@@ -63,8 +63,8 @@ function AIWidget() {
   const client = usePageMcpClient();
 
   const handleClick = async () => {
-    const tools = await client.listTools();
-    const result = await client.callTool('searchProducts', { keyword: 'headphones' });
+    const tools = await client.toolsList();
+    const result = await client.toolsCall('searchProducts', { keyword: 'headphones' });
     console.log(result);
   };
 

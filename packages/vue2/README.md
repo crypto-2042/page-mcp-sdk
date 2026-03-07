@@ -63,7 +63,7 @@ export default {
       });
 
       // Discover tools from AI side
-      const tools = await this.$pageMcp.client.listTools();
+      const tools = await this.$pageMcp.client.toolsList();
       console.log('Available tools:', tools);
     }
   }
