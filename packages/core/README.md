@@ -84,7 +84,7 @@ const transport = new PostMessageTransport({ role: 'client', channel: 'page-mcp'
 const client = new PageMcpClient({ transport });
 await client.connect();
 
-const tools = await client.listTools();
+const tools = await client.toolsList();
 ```
 
 ### Chrome Extension Background ↔ Content Script (ChromeRuntimeTransport)
