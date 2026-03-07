@@ -115,6 +115,9 @@ AI Agent 越来越需要理解和操作网页。传统的 DOM 抓取既脆弱又
 # 核心 SDK（必需）
 npm install @page-mcp/core
 
+# WebMCP 适配器（可选）
+npm install @page-mcp/webmcp-adapter
+
 # AI 聊天组件（可选）
 npm install @page-mcp/chat
 
@@ -127,7 +130,8 @@ npm install @page-mcp/vue2     # Vue 2
 ### 最简示例（纯 JS）
 
 ```typescript
-import { PageMcpHost, PageMcpClient, EventBus, installWebMcpPolyfill } from '@page-mcp/core';
+import { PageMcpHost, PageMcpClient, EventBus } from '@page-mcp/core';
+import { installWebMcpPolyfill } from '@page-mcp/webmcp-adapter';
 
 // 1. 创建共享通信总线
 const bus = new EventBus();
@@ -297,15 +301,15 @@ host.registerSkill({
   ]
 });
 
-// AI 侧执行
-const result = await client.executeSkill('smartOrder', { productName: '耳机', quantity: 2 });
-// => { success: true, steps: { findProduct: {...}, verifyStock: {...}, addItem: {...}, checkout: {...} } }
+// 技能编排能力通过 Extensions 命名空间提供
+// import { Extensions } from '@page-mcp/core';
+// const runner = Extensions.createSkillRunner();
 ```
 
 ### WebMCP Polyfill
 
 ```typescript
-import { installWebMcpPolyfill, isWebMcpSupported } from '@page-mcp/core';
+import { installWebMcpPolyfill, isWebMcpSupported } from '@page-mcp/webmcp-adapter';
 
 // 检测浏览器是否原生支持 WebMCP
 isWebMcpSupported(); // => boolean
@@ -534,9 +538,9 @@ await client.callTool(name, args);
 await client.listResources();
 await client.readResource(uri);
 
-// Skills
-await client.listSkills();
-await client.executeSkill(name, args);
+// Prompts
+await client.listPrompts();
+await client.getPrompt(name, args);
 
 client.disconnect();
 ```
@@ -547,12 +551,12 @@ client.disconnect();
 |---|---|---|
 | `ping` | 心跳检测 | — |
 | `getHostInfo` | 获取 Host 信息 | — |
-| `listTools` | 获取工具列表 | — |
-| `callTool` | 调用工具 | `{ name, args }` |
-| `listResources` | 获取资源列表 | — |
-| `readResource` | 读取资源 | `{ uri }` |
-| `listSkills` | 获取技能列表 | — |
-| `executeSkill` | 执行技能 | `{ name, args }` |
+| `tools/list` | 获取工具列表（RPC 方法） | `{ cursor?, limit? }` |
+| `tools/call` | 调用工具（RPC 方法） | `{ name, arguments }` |
+| `resources/list` | 获取资源列表（RPC 方法） | `{ cursor?, limit? }` |
+| `resources/read` | 读取资源（RPC 方法） | `{ uri }` |
+| `prompts/list` | 获取提示词模板列表（RPC 方法） | `{ cursor?, limit? }` |
+| `prompts/get` | 解析提示词模板（RPC 方法） | `{ name, arguments }` |
 
 ## Demo
 
