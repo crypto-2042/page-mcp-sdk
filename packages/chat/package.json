@@ -33,7 +33,9 @@
         "typecheck": "tsc --noEmit"
     },
     "dependencies": {
-        "@page-mcp/core": "workspace:^"
+        "@page-mcp/core": "workspace:^",
+        "dompurify": "^3.2.5",
+        "marked": "^15.0.7"
     },
     "devDependencies": {
         "tsup": "^8.0.0",
