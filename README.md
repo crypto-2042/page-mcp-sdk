@@ -115,6 +115,9 @@ AI Agents increasingly need to understand and interact with web pages. Tradition
 # Core SDK (required)
 npm install @page-mcp/core
 
+# WebMCP adapter (optional)
+npm install @page-mcp/webmcp-adapter
+
 # AI Chat Widget (optional)
 npm install @page-mcp/chat
 
@@ -127,7 +130,8 @@ npm install @page-mcp/vue2     # Vue 2
 ### Basic Example (Vanilla JS)
 
 ```typescript
-import { PageMcpHost, PageMcpClient, EventBus, installWebMcpPolyfill } from '@page-mcp/core';
+import { PageMcpHost, PageMcpClient, EventBus } from '@page-mcp/core';
+import { installWebMcpPolyfill } from '@page-mcp/webmcp-adapter';
 
 // 1. Create shared communication bus
 const bus = new EventBus();
@@ -293,15 +297,15 @@ host.registerSkill({
   ]
 });
 
-// AI side
-const result = await client.executeSkill('smartOrder', { productName: 'headphones', quantity: 2 });
-// => { success: true, steps: { findProduct: {...}, verifyStock: {...}, addItem: {...}, checkout: {...} } }
+// Skill orchestration is available via Extensions namespace
+// import { Extensions } from '@page-mcp/core';
+// const runner = Extensions.createSkillRunner();
 ```
 
 ### WebMCP Polyfill
 
 ```typescript
-import { installWebMcpPolyfill, isWebMcpSupported } from '@page-mcp/core';
+import { installWebMcpPolyfill, isWebMcpSupported } from '@page-mcp/webmcp-adapter';
 
 // Check browser support
 isWebMcpSupported(); // => boolean
@@ -530,9 +534,9 @@ await client.callTool(name, args);
 await client.listResources();
 await client.readResource(uri);
 
-// Skills
-await client.listSkills();
-await client.executeSkill(name, args);
+// Prompts
+await client.listPrompts();
+await client.getPrompt(name, args);
 
 client.disconnect();
 ```
@@ -543,12 +547,12 @@ client.disconnect();
 |---|---|---|
 | `ping` | Heartbeat | — |
 | `getHostInfo` | Get host info (name, version) | — |
-| `listTools` | List registered tools | — |
-| `callTool` | Invoke a tool | `{ name, args }` |
-| `listResources` | List registered resources | — |
-| `readResource` | Read a resource | `{ uri }` |
-| `listSkills` | List registered skills | — |
-| `executeSkill` | Execute a skill workflow | `{ name, args }` |
+| `tools/list` | List registered tools (RPC method) | `{ cursor?, limit? }` |
+| `tools/call` | Invoke a tool (RPC method) | `{ name, arguments }` |
+| `resources/list` | List registered resources (RPC method) | `{ cursor?, limit? }` |
+| `resources/read` | Read a resource (RPC method) | `{ uri }` |
+| `prompts/list` | List prompts (RPC method) | `{ cursor?, limit? }` |
+| `prompts/get` | Resolve a prompt template (RPC method) | `{ name, arguments }` |
 
 ## Demo
 
