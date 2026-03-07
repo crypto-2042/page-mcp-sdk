@@ -1,0 +1,31 @@
+{
+  "name": "@page-mcp/webmcp-adapter",
+  "version": "1.1.0",
+  "description": "WebMCP browser adapter for Page MCP core",
+  "license": "MIT",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "files": ["dist", "README.md"],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "typecheck": "tsc --noEmit"
+  },
+  "peerDependencies": {
+    "@page-mcp/core": "^1.1.0"
+  },
+  "devDependencies": {
+    "@page-mcp/core": "workspace:^",
+    "tsup": "^8.0.0",
+    "typescript": "^5.4.0"
+  }
+}

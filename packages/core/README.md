@@ -1,25 +1,26 @@
 # @page-mcp/core
 
-Core package for the Page MCP SDK. Provides `PageMcpHost`, `PageMcpClient`, `EventBus`, `SkillRunner`, WebMCP Polyfill, and cross-context Transports.
+Core package for the Page MCP SDK. Provides `PageMcpHost`, `PageMcpClient`, `EventBus`, and cross-context transports for MCP-compatible communication.
 
 > 🌐 **Live Preview:** [https://page-mcp.org](https://page-mcp.org)
 
 ## Features
 
-- 🔧 **PageMcpHost** — Register tools, resources, and skills on the page side
+- 🔧 **PageMcpHost** — Register tools, resources, and prompts on the page side
 - 🤖 **PageMcpClient** — Discover and invoke page capabilities from the AI side
 - 🔌 **ITransport** — Pluggable transport interface for flexible communication
 - 🚌 **EventBus** — In-memory transport for same-context usage
 - 📨 **PostMessageTransport** — Cross-context transport via `window.postMessage` (Content Script ↔ Page)
 - 🧩 **ChromeRuntimeTransport** — Chrome Extension transport via `chrome.runtime` messaging
-- 🌍 **WebMCP Polyfill** — Polyfills `navigator.modelContext.registerTool()` for all browsers
-- 🚀 **SkillRunner** — Execute multi-step skill workflows with data passing and validation
+- ✅ **MCP method surface** — `initialize`, `tools/*`, `resources/*`, `prompts/*`
+- 🧪 **Strict protocol mode** — reject legacy RPC methods during migration hardening
 - 📦 **Zero dependencies** — No third-party runtime dependencies
 
 ## Installation
 
 ```bash
 npm install @page-mcp/core
+npm install @page-mcp/webmcp-adapter # optional: navigator.modelContext polyfill
 ```
 
 ## Quick Start
@@ -27,7 +28,8 @@ npm install @page-mcp/core
 ### Same-Context Usage (EventBus)
 
 ```typescript
-import { PageMcpHost, PageMcpClient, EventBus, installWebMcpPolyfill } from '@page-mcp/core';
+import { PageMcpHost, PageMcpClient, EventBus } from '@page-mcp/core';
+import { installWebMcpPolyfill } from '@page-mcp/webmcp-adapter';
 
 // 1. Create shared communication bus
 const bus = new EventBus();
@@ -57,10 +59,10 @@ installWebMcpPolyfill(host);
 
 // 4. AI side: discover and invoke
 const client = new PageMcpClient({ bus });
-await client.connect();
+await client.connect(); // prefers initialize(), falls back only if initialize is not implemented
 
-const tools = await client.listTools();
-const result = await client.callTool('searchProducts', { keyword: 'headphones' });
+const tools = await client.toolsList();
+const result = await client.toolsCall('searchProducts', { keyword: 'headphones' });
 ```
 
 ### Browser Extension (PostMessageTransport)
@@ -160,12 +162,11 @@ const transport = new ChromeRuntimeTransport({
 ### `PageMcpHost`
 
 ```typescript
-const host = new PageMcpHost({ name: 'app', version: '1.0', transport });
+const host = new PageMcpHost({ name: 'app', version: '1.0', transport, strictProtocol: false });
 
 host.registerTool(toolDef);       // Register tool (WebMCP aligned)
 host.registerResource(resDef);    // Register resource
-host.registerSkill(skillDef);     // Register skill
-
+host.registerSkill(skillDef);     // Register extension skill
 host.start();                     // Start listening for RPC requests
 host.getTransport();              // Get transport instance
 host.getBus();                    // Get EventBus (deprecated, throws if not EventBus)
@@ -178,21 +179,53 @@ host.destroy();                   // Cleanup
 const client = new PageMcpClient({ transport, connectTimeout: 5000 });
 await client.connect();
 
-await client.listTools();
-await client.callTool(name, args);
-await client.listResources();
-await client.readResource(uri);
-await client.listSkills();
-await client.executeSkill(name, args);
+await client.initialize();
+await client.toolsList();
+await client.toolsCall(name, args);
+await client.resourcesList();
+await client.resourcesRead(uri);
+await client.promptsList();
+await client.promptsGet(name, args);
 
 client.getTransport();             // Get transport instance
 client.disconnect();
 ```
 
+### `Extensions` Skills API
+
+```typescript
+import { Extensions } from '@page-mcp/core';
+
+host.registerSkill({
+  name: 'cart-checkout',
+  version: '1.0.0',
+  description: 'Checkout flow',
+  skillMd: '# cart-checkout\nRun checkout flow.',
+  run: async (ctx, input) => {
+    await ctx.callTool('addToCart', input);
+    return ctx.callTool('placeOrder', {});
+  },
+});
+
+const client = new PageMcpClient({ transport });
+await client.connect();
+
+const skills = Extensions.createSkillsClient(client);
+await skills.list();
+await skills.get('cart-checkout');
+await skills.execute('cart-checkout', { productId: 'p1' });
+```
+
+`scriptJs` support:
+
+- You can register `scriptJs` text on skills.
+- Inline script execution is disabled by default.
+- Enable explicitly via `new PageMcpHost({ skills: { allowInlineScriptExecution: true } })`.
+
 ### WebMCP Polyfill
 
 ```typescript
-import { installWebMcpPolyfill, isWebMcpSupported } from '@page-mcp/core';
+import { installWebMcpPolyfill, isWebMcpSupported } from '@page-mcp/webmcp-adapter';
 
 isWebMcpSupported(); // Check native support
 installWebMcpPolyfill(host); // Install polyfill

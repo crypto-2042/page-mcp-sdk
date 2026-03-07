@@ -1,0 +1,9 @@
+{
+  "resources": [
+    {
+      "uri": "page://catalog",
+      "name": "Product Catalog",
+      "description": "Current product catalog"
+    }
+  ]
+}

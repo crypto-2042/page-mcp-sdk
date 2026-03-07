@@ -2,6 +2,7 @@
     "name": "page-mcp-sdk",
     "private": true,
     "scripts": {
+        "test": "pnpm -r run test",
         "build": "pnpm -r run build",
         "build:core": "pnpm --filter @page-mcp/core run build",
         "build:chat": "pnpm --filter @page-mcp/chat run build",
