@@ -16,6 +16,7 @@ import {
 } from 'vue';
 
 import {
+    Extensions,
     PageMcpHost,
     PageMcpClient,
     EventBus,
@@ -167,6 +168,13 @@ export function useRegisterTool(definition: ToolDefinition): void {
             // Already registered
         }
     });
+    onUnmounted(() => {
+        try {
+            host.unregisterTool(definition.name);
+        } catch {
+            // Already unregistered
+        }
+    });
 }
 
 /**
@@ -179,6 +187,13 @@ export function useRegisterResource(definition: ResourceDefinition): void {
             host.registerResource(definition);
         } catch {
             // Already registered
+        }
+    });
+    onUnmounted(() => {
+        try {
+            host.unregisterResource(definition.uri);
+        } catch {
+            // Already unregistered
         }
     });
 }
@@ -195,6 +210,18 @@ export function useRegisterSkill(definition: SkillDefinition): void {
             // Already registered
         }
     });
+    onUnmounted(() => {
+        try {
+            host.unregisterSkill(definition.name);
+        } catch {
+            // Already unregistered
+        }
+    });
+}
+
+export function usePageMcpSkills(): InstanceType<typeof Extensions.SkillsClient> {
+    const client = usePageMcpClient();
+    return Extensions.createSkillsClient(client);
 }
 
 /**
@@ -219,11 +246,19 @@ export function useRegisterPrompt(definition: PromptDefinition): void {
             // Already registered
         }
     });
+    onUnmounted(() => {
+        try {
+            host.unregisterPrompt(definition.name);
+        } catch {
+            // Already unregistered
+        }
+    });
 }
 
 // ------ Re-exports ------
 
 export {
+    Extensions,
     PageMcpHost,
     PageMcpClient,
     EventBus,
@@ -236,7 +271,9 @@ export type {
     ResourceInfo,
     SkillDefinition,
     SkillInfo,
-    SkillResult,
+    SkillGetResult,
+    SkillExecutionResult,
+    SkillExecutionContext,
     PromptDefinition,
     PromptInfo,
     HostInfo,

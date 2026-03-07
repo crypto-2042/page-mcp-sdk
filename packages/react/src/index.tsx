@@ -13,6 +13,7 @@ import React, {
 } from 'react';
 
 import {
+    Extensions,
     PageMcpHost,
     PageMcpClient,
     EventBus,
@@ -139,6 +140,13 @@ export function useRegisterTool(definition: ToolDefinition): void {
         } catch {
             // Already registered (e.g., strict mode double-mount)
         }
+        return () => {
+            try {
+                host.unregisterTool(defRef.current.name);
+            } catch {
+                // Already unregistered
+            }
+        };
     }, [host, defRef.current.name]);
 }
 
@@ -156,6 +164,13 @@ export function useRegisterResource(definition: ResourceDefinition): void {
         } catch {
             // Already registered
         }
+        return () => {
+            try {
+                host.unregisterResource(defRef.current.uri);
+            } catch {
+                // Already unregistered
+            }
+        };
     }, [host, defRef.current.uri]);
 }
 
@@ -173,7 +188,22 @@ export function useRegisterSkill(definition: SkillDefinition): void {
         } catch {
             // Already registered
         }
+        return () => {
+            try {
+                host.unregisterSkill(defRef.current.name);
+            } catch {
+                // Already unregistered
+            }
+        };
     }, [host, defRef.current.name]);
+}
+
+/**
+ * Get an Extensions Skills client bound to the current PageMcpClient.
+ */
+export function usePageMcpSkills(): InstanceType<typeof Extensions.SkillsClient> {
+    const client = usePageMcpClient();
+    return useMemo(() => Extensions.createSkillsClient(client), [client]);
 }
 
 /**
@@ -200,12 +230,20 @@ export function useRegisterPrompt(definition: PromptDefinition): void {
         } catch {
             // Already registered (e.g., strict mode double-mount)
         }
+        return () => {
+            try {
+                host.unregisterPrompt(defRef.current.name);
+            } catch {
+                // Already unregistered
+            }
+        };
     }, [host, defRef.current.name]);
 }
 
 // ------ Re-exports ------
 
 export {
+    Extensions,
     PageMcpHost,
     PageMcpClient,
     EventBus,
@@ -218,7 +256,9 @@ export type {
     ResourceInfo,
     SkillDefinition,
     SkillInfo,
-    SkillResult,
+    SkillGetResult,
+    SkillExecutionResult,
+    SkillExecutionContext,
     PromptDefinition,
     PromptInfo,
     HostInfo,
