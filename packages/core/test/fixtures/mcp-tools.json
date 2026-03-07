@@ -1,0 +1,17 @@
+{
+  "tools": [
+    {
+      "name": "search_products",
+      "description": "Search products by keyword",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "keyword": {
+            "type": "string"
+          }
+        },
+        "required": ["keyword"]
+      }
+    }
+  ]
+}

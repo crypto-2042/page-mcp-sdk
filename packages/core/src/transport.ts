@@ -2,7 +2,7 @@
 // Page MCP SDK — EventBus Transport
 // ============================================================
 
-import type { RpcRequest, RpcResponse } from './types.js';
+import type { RpcRequest, RpcResponse, RpcMethod, ITransport } from './types.js';
 
 type Listener = (data: unknown) => void;
 type RpcHandler = (request: RpcRequest) => Promise<RpcResponse>;
@@ -15,8 +15,11 @@ function generateId(): string {
 /**
  * In-memory EventBus for Host ↔ Client communication.
  * Supports both pub/sub events and request/response RPC.
+ *
+ * Suitable for same-context usage where Host and Client share
+ * the same JavaScript execution environment.
  */
-export class EventBus {
+export class EventBus implements ITransport {
     private listeners = new Map<string, Set<Listener>>();
     private pendingRequests = new Map<string, {
         resolve: (value: RpcResponse) => void;

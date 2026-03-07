@@ -3,7 +3,7 @@
 </p>
 
 <p align="center">
-  <strong>WebMCP Polyfill & Enhancement — 让网页自我解释，通过 MCP 协议将页面能力暴露给 AI</strong>
+  <strong>MCP 对齐的网页能力 SDK — 通过标准化的 tools/resources/prompts 与 skills 扩展让网页自我解释给 AI</strong>
 </p>
 
 <p align="center">
@@ -38,7 +38,7 @@
   - [Tools（工具）— WebMCP 对齐](#tools工具-webmcp-对齐)
   - [Resources（资源）— 超越 WebMCP](#resources资源-超越-webmcp)
   - [Skills（技能/工作流）— 超越 WebMCP](#skills技能工作流-超越-webmcp)
-  - [WebMCP Polyfill](#webmcp-polyfill)
+  - [WebMCP Adapter](#webmcp-adapter)
   - [Chat Widget（聊天组件）](#chat-widget聊天组件)
 - [框架适配](#框架适配)
   - [React](#react-page-mcpreact)
@@ -84,24 +84,25 @@ AI Agent 越来越需要理解和操作网页。传统的 DOM 抓取既脆弱又
 
 [WebMCP](https://github.com/niccolli/niccolli.github.io) 是 Google 和 Microsoft 联合提出的 W3C 标准，通过 `navigator.modelContext.registerTool()` 让页面暴露工具给 AI Agent。
 
-**本 SDK 是 WebMCP 的 Polyfill + Enhancement：**
+**本 SDK 是 MCP 对齐运行时 + WebMCP 浏览器适配器：**
 
 | 能力 | WebMCP 标准 | 本 SDK |
 |---|---|---|
-| `registerTool()` | ✅ 浏览器原生（仅 Chrome Canary） | ✅ Polyfill，全浏览器可用 |
+| `registerTool()` | ✅ 浏览器原生（可用范围有限） | ✅ 通过 `@page-mcp/webmcp-adapter` polyfill |
 | `inputSchema` / `execute` | ✅ 标准字段 | ✅ 完全对齐 |
 | `annotations.readOnlyHint` | ✅ 标准字段 | ✅ 完全对齐 |
 | **Resources（数据暴露）** | ❌ 不支持 | ✅ `registerResource()` |
 | **Skills（工作流编排）** | ❌ 不支持 | ✅ `registerSkill()` |
 | **Chat Widget（AI 聊天）** | ❌ 不支持 | ✅ `@page-mcp/chat` |
 | **框架适配** | ❌ 仅原生 JS | ✅ React / Vue 3 / Vue 2 |
-| **自动检测原生支持** | — | ✅ 有则用原生，无则 polyfill |
+| **自动检测原生支持** | — | ✅ 有则用原生，无则由 adapter 补齐 |
 
 ## 包一览
 
 | 包名 | 描述 | 大小 |
 |---|---|---|
-| [`@page-mcp/core`](./packages/core) | 核心 SDK — Host、Client、EventBus、WebMCP Polyfill、SkillRunner | ~13 KB |
+| [`@page-mcp/core`](./packages/core) | 核心 SDK — Host、Client、EventBus、Transport、MCP + Skills 扩展 API | ~13 KB |
+| [`@page-mcp/webmcp-adapter`](./packages/webmcp-adapter) | 浏览器 WebMCP 适配器（polyfill + PageMcpHost 桥接） | ~3 KB |
 | [`@page-mcp/chat`](./packages/chat) | 可嵌入的 AI 聊天组件，支持 OpenAI 兼容 API + MCP | ~38 KB |
 | [`@page-mcp/react`](./packages/react) | React 适配器 — Provider + Hooks | ~3 KB |
 | [`@page-mcp/vue3`](./packages/vue3) | Vue 3 适配器 — Plugin + Composables | ~3 KB |
@@ -115,6 +116,9 @@ AI Agent 越来越需要理解和操作网页。传统的 DOM 抓取既脆弱又
 # 核心 SDK（必需）
 npm install @page-mcp/core
 
+# WebMCP 适配器（可选）
+npm install @page-mcp/webmcp-adapter
+
 # AI 聊天组件（可选）
 npm install @page-mcp/chat
 
@@ -127,7 +131,8 @@ npm install @page-mcp/vue2     # Vue 2
 ### 最简示例（纯 JS）
 
 ```typescript
-import { PageMcpHost, PageMcpClient, EventBus, installWebMcpPolyfill } from '@page-mcp/core';
+import { PageMcpHost, PageMcpClient, EventBus } from '@page-mcp/core';
+import { installWebMcpPolyfill } from '@page-mcp/webmcp-adapter';
 
 // 1. 创建共享通信总线
 const bus = new EventBus();
@@ -159,10 +164,10 @@ installWebMcpPolyfill(host);
 const client = new PageMcpClient({ bus });
 await client.connect();
 
-const tools = await client.listTools();
+const tools = await client.toolsList();
 console.log('可用工具:', tools);
 
-const result = await client.callTool('searchProducts', { keyword: '耳机' });
+const result = await client.toolsCall('searchProducts', { keyword: '耳机' });
 console.log('搜索结果:', result);
 ```
 
@@ -244,68 +249,43 @@ host.registerResource({
 });
 
 // AI 侧读取
-const cart = await client.readResource('page://cart/items');
+const cart = await client.resourcesRead('page://cart/items');
 // => { items: [...], total: 299.97 }
 ```
 
 ### Skills（技能/工作流）— 超越 WebMCP
 
-Skills 是多个 Tools 按步骤编排的**工作流**。每个步骤可以引用已注册的 Tool，支持步骤间数据传递和条件校验。
-
-> 💡 这是 Page MCP SDK 在 WebMCP 之上的增强能力。
+Skills 通过 `extensions/skills/*` RPC 扩展暴露。一个 skill 至少包含 `name`、`version`、`skillMd`，并提供运行逻辑（`run` 或可选 `scriptJs`）。
 
 ```typescript
+import { Extensions } from '@page-mcp/core';
+
 host.registerSkill({
-  name: 'smartOrder',
-  description: '智能下单：查找商品 → 检查库存 → 加入购物车 → 下单',
-  inputSchema: {
-    type: 'object',
-    properties: {
-      productName: { type: 'string' },
-      quantity: { type: 'number' }
-    },
-    required: ['productName']
-  },
-  steps: [
-    {
-      name: 'findProduct',
-      tool: 'getProductInfo',
-      input: (args) => ({ productName: args.productName }),
-      validate: (result) => !!(result as any).name,
-      onFail: { error: '商品未找到' }
-    },
-    {
-      name: 'verifyStock',
-      tool: 'checkStock',
-      input: (args) => ({ productName: args.productName }),
-      validate: (result, args) => (result as any).stock >= Number(args.quantity || 1),
-      onFail: { error: '库存不足' }
-    },
-    {
-      name: 'addItem',
-      tool: 'addToCart',
-      input: (args, prev) => ({
-        productName: (prev.findProduct as any).name,
-        quantity: args.quantity || 1
-      })
-    },
-    {
-      name: 'checkout',
-      tool: 'placeOrder',
-      input: () => ({})
-    }
-  ]
+  name: 'cart-checkout',
+  version: '1.0.0',
+  description: '当前购物车结算流程',
+  skillMd: '# cart-checkout\n执行结算并提交订单。',
+  run: async (ctx, input) => {
+    await ctx.callTool('addToCart', input);
+    return ctx.callTool('placeOrder', {});
+  }
 });
 
-// AI 侧执行
-const result = await client.executeSkill('smartOrder', { productName: '耳机', quantity: 2 });
-// => { success: true, steps: { findProduct: {...}, verifyStock: {...}, addItem: {...}, checkout: {...} } }
+const skills = Extensions.createSkillsClient(client);
+await skills.list();
+await skills.get('cart-checkout');
+await skills.execute('cart-checkout', { productId: 'p1', quantity: 1 });
 ```
 
-### WebMCP Polyfill
+`scriptJs` 说明：
+- 支持在注册时传入 `scriptJs` 文本。
+- 默认禁用内联 JS 执行。
+- 需要显式开启：`new PageMcpHost({ skills: { allowInlineScriptExecution: true } })`。
+
+### WebMCP Adapter
 
 ```typescript
-import { installWebMcpPolyfill, isWebMcpSupported } from '@page-mcp/core';
+import { installWebMcpPolyfill, isWebMcpSupported } from '@page-mcp/webmcp-adapter';
 
 // 检测浏览器是否原生支持 WebMCP
 isWebMcpSupported(); // => boolean
@@ -504,14 +484,16 @@ bus.destroy();
 页面侧的宿主，注册 Tools / Resources / Skills 并处理 AI 请求。
 
 ```typescript
+const bus = new EventBus();
 const host = new PageMcpHost({ name: 'app', version: '1.0', bus });
 
 host.registerTool(toolDef);       // 注册工具（WebMCP 对齐）
 host.registerResource(resDef);    // 注册资源
-host.registerSkill(skillDef);     // 注册技能
+host.registerPrompt(promptDef);   // 注册 Prompt
+host.registerSkill(skillDef);     // 注册技能扩展
 
 host.start();                     // 开始监听 RPC 请求
-host.getBus();                    // 获取 EventBus 实例
+host.getTransport();              // 获取 Transport 实例
 host.destroy();                   // 停止监听并清理
 ```
 
@@ -520,23 +502,32 @@ host.destroy();                   // 停止监听并清理
 AI 侧的客户端，发现和调用页面能力。
 
 ```typescript
+import { Extensions } from '@page-mcp/core';
+
+const bus = new EventBus();
 const client = new PageMcpClient({ bus, connectTimeout: 5000 });
 
 await client.connect();
+await client.initialize();
 client.isConnected();
 client.getHostInfo();
 
 // Tools
-await client.listTools();
-await client.callTool(name, args);
+await client.toolsList();
+await client.toolsCall(name, args);
 
 // Resources
-await client.listResources();
-await client.readResource(uri);
+await client.resourcesList();
+await client.resourcesRead(uri);
 
-// Skills
-await client.listSkills();
-await client.executeSkill(name, args);
+// Prompts
+await client.promptsList();
+await client.promptsGet(name, args);
+
+// Skills 扩展
+const skills = Extensions.createSkillsClient(client);
+await skills.list();
+await skills.execute(name, args);
 
 client.disconnect();
 ```
@@ -545,14 +536,18 @@ client.disconnect();
 
 | 方法 | 描述 | 参数 |
 |---|---|---|
-| `ping` | 心跳检测 | — |
-| `getHostInfo` | 获取 Host 信息 | — |
-| `listTools` | 获取工具列表 | — |
-| `callTool` | 调用工具 | `{ name, args }` |
-| `listResources` | 获取资源列表 | — |
-| `readResource` | 读取资源 | `{ uri }` |
-| `listSkills` | 获取技能列表 | — |
-| `executeSkill` | 执行技能 | `{ name, args }` |
+| `initialize` | MCP 握手（协议版本/能力/serverInfo） | `{ protocolVersion, capabilities, clientInfo }` |
+| `tools/list` | 获取工具列表（RPC 方法） | `{ cursor?, limit? }` |
+| `tools/call` | 调用工具（RPC 方法） | `{ name, arguments }` |
+| `resources/list` | 获取资源列表（RPC 方法） | `{ cursor?, limit? }` |
+| `resources/read` | 读取资源（RPC 方法） | `{ uri }` |
+| `prompts/list` | 获取提示词模板列表（RPC 方法） | `{ cursor?, limit? }` |
+| `prompts/get` | 解析提示词模板（RPC 方法） | `{ name, arguments }` |
+| `extensions/skills/list` | 获取技能列表（扩展） | `{ cursor?, limit? }` |
+| `extensions/skills/get` | 获取技能详情（`skillMd`、元数据） | `{ name }` |
+| `extensions/skills/execute` | 通过 `run` 或 `scriptJs` 执行技能 | `{ name, arguments }` |
+
+兼容迁移期间，非 strict 模式仍接受 `ping`、`getHostInfo`、`listTools`、`callTool`、`listResources`、`readResource`、`listPrompts` 等旧方法。
 
 ## Demo
 
@@ -602,12 +597,13 @@ page-mcp-sdk/
 │   ├── core/               # @page-mcp/core
 │   │   └── src/
 │   │       ├── types.ts        # 共享类型（WebMCP 对齐）
+│   │       ├── mcp-types.ts    # MCP 原生方法/类型
 │   │       ├── transport.ts    # EventBus 通信层
 │   │       ├── host.ts         # PageMcpHost
 │   │       ├── client.ts       # PageMcpClient
-│   │       ├── polyfill.ts     # WebMCP Polyfill
-│   │       ├── skill-runner.ts # 技能执行引擎
+│   │       ├── extensions/     # Skills 扩展客户端/类型
 │   │       └── index.ts        # 统一导出
+│   ├── webmcp-adapter/     # @page-mcp/webmcp-adapter
 │   ├── chat/               # @page-mcp/chat
 │   │   └── src/
 │   │       ├── chat-engine.ts  # AI 聊天引擎（基于 fetch）
@@ -628,7 +624,7 @@ page-mcp-sdk/
 
 1. **WebMCP 对齐** — Tool API 与 W3C WebMCP 标准完全兼容
 2. **超越标准** — Resources + Skills 提供 WebMCP 之外的增值能力
-3. **自动检测** — 有浏览器原生 WebMCP 则用原生，无则 polyfill
+3. **原生优先 WebMCP** — 有浏览器原生 WebMCP 则用原生，无则由 adapter 补齐
 4. **框架无关核心** — 核心逻辑不绑定任何框架
 5. **零运行时依赖** — 核心 SDK 无第三方依赖
 6. **可替换 Transport** — 通信层可拔插替换

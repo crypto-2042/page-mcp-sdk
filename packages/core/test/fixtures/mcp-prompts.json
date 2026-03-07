@@ -1,0 +1,14 @@
+{
+  "prompts": [
+    {
+      "name": "checkout_assistant",
+      "description": "Help a user complete checkout",
+      "arguments": [
+        {
+          "name": "cart_id",
+          "required": true
+        }
+      ]
+    }
+  ]
+}

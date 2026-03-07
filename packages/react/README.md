@@ -63,8 +63,8 @@ function AIWidget() {
   const client = usePageMcpClient();
 
   const handleClick = async () => {
-    const tools = await client.listTools();
-    const result = await client.callTool('searchProducts', { keyword: 'headphones' });
+    const tools = await client.toolsList();
+    const result = await client.toolsCall('searchProducts', { keyword: 'headphones' });
     console.log(result);
   };
 
@@ -78,6 +78,7 @@ function AIWidget() {
 |---|---|
 | `usePageMcpHost()` | Get the `PageMcpHost` instance |
 | `usePageMcpClient()` | Get the `PageMcpClient` instance |
+| `usePageMcpSkills()` | Get the Extensions skills client |
 | `usePageMcpBus()` | Get the `EventBus` instance |
 | `useRegisterTool(def)` | Register a tool (auto-cleanup on unmount) |
 | `useRegisterResource(def)` | Register a resource (auto-cleanup on unmount) |
@@ -86,7 +87,7 @@ function AIWidget() {
 ## How It Works
 
 - `PageMcpProvider` creates `EventBus`, `PageMcpHost`, and `PageMcpClient` instances and provides them via React Context.
-- `useRegisterTool` / `useRegisterResource` / `useRegisterSkill` register capabilities on mount and automatically clean up on unmount.
+- `useRegisterTool` / `useRegisterResource` / `useRegisterSkill` / `useRegisterPrompt` register capabilities on mount and automatically clean up on unmount.
 - The Host is started automatically when the Provider mounts.
 
 For detailed documentation, see the [main README](../../README.md#react-page-mcpreact).

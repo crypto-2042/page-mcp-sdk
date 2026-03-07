@@ -3,6 +3,7 @@
 // ============================================================
 
 import {
+    Extensions,
     PageMcpHost,
     PageMcpClient,
     EventBus,
@@ -33,6 +34,12 @@ interface Vue2Instance {
         [key: string]: unknown;
     };
     $root: Vue2Instance;
+    __pageMcpRegistered?: {
+        tools: string[];
+        resources: string[];
+        skills: string[];
+        prompts: string[];
+    };
     [key: string]: unknown;
 }
 
@@ -45,6 +52,7 @@ interface Vue2Constructor {
 interface PageMcpInjection {
     host: PageMcpHost;
     client: PageMcpClient;
+    skills: InstanceType<typeof Extensions.SkillsClient>;
     bus: EventBus;
     hostInfo: HostInfo;
 }
@@ -77,12 +85,13 @@ export const PageMcpPlugin = {
         const bus = options.bus ?? new EventBus();
         const host = new PageMcpHost({ name: options.name, version: options.version, bus });
         const client = new PageMcpClient({ bus });
+        const skills = Extensions.createSkillsClient(client);
         const hostInfo: HostInfo = { name: options.name, version: options.version };
 
         host.start();
         client.connect();
 
-        const injection: PageMcpInjection = { host, client, bus, hostInfo };
+        const injection: PageMcpInjection = { host, client, skills, bus, hostInfo };
 
         // Make $pageMcp available in all components
         Vue.prototype.$pageMcp = injection;
@@ -118,6 +127,12 @@ const pageMcpAutoRegisterMixin: Vue2ComponentOptions = {
         if (!pageMcp) return;
 
         const { host } = pageMcp;
+        this.__pageMcpRegistered = {
+            tools: [],
+            resources: [],
+            skills: [],
+            prompts: [],
+        };
 
         // Register tools from component options
         const tools = this.$options.pageMcpTools;
@@ -125,6 +140,7 @@ const pageMcpAutoRegisterMixin: Vue2ComponentOptions = {
             for (const tool of tools) {
                 try {
                     host.registerTool(tool);
+                    this.__pageMcpRegistered.tools.push(tool.name);
                 } catch {
                     // Already registered
                 }
@@ -137,6 +153,7 @@ const pageMcpAutoRegisterMixin: Vue2ComponentOptions = {
             for (const resource of resources) {
                 try {
                     host.registerResource(resource);
+                    this.__pageMcpRegistered.resources.push(resource.uri);
                 } catch {
                     // Already registered
                 }
@@ -149,6 +166,7 @@ const pageMcpAutoRegisterMixin: Vue2ComponentOptions = {
             for (const skill of skills) {
                 try {
                     host.registerSkill(skill);
+                    this.__pageMcpRegistered.skills.push(skill.name);
                 } catch {
                     // Already registered
                 }
@@ -161,10 +179,30 @@ const pageMcpAutoRegisterMixin: Vue2ComponentOptions = {
             for (const prompt of prompts) {
                 try {
                     host.registerPrompt(prompt);
+                    this.__pageMcpRegistered.prompts.push(prompt.name);
                 } catch {
                     // Already registered
                 }
             }
+        }
+    },
+    beforeDestroy(this: Vue2Instance) {
+        const pageMcp = this.$pageMcp;
+        const registered = this.__pageMcpRegistered;
+        if (!pageMcp || !registered) return;
+        const { host } = pageMcp;
+
+        for (const name of registered.tools) {
+            try { host.unregisterTool(name); } catch { /* noop */ }
+        }
+        for (const uri of registered.resources) {
+            try { host.unregisterResource(uri); } catch { /* noop */ }
+        }
+        for (const name of registered.skills) {
+            try { host.unregisterSkill(name); } catch { /* noop */ }
+        }
+        for (const name of registered.prompts) {
+            try { host.unregisterPrompt(name); } catch { /* noop */ }
         }
     },
 };
@@ -178,6 +216,7 @@ export { pageMcpAutoRegisterMixin as pageMcpMixin };
 // ------ Re-exports ------
 
 export {
+    Extensions,
     PageMcpHost,
     PageMcpClient,
     EventBus,
@@ -190,7 +229,9 @@ export type {
     ResourceInfo,
     SkillDefinition,
     SkillInfo,
-    SkillResult,
+    SkillGetResult,
+    SkillExecutionResult,
+    SkillExecutionContext,
     PromptDefinition,
     PromptInfo,
     HostInfo,

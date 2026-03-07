@@ -3,7 +3,6 @@
 // ============================================================
 
 import { EventBus } from './transport.js';
-import { SkillRunner } from './skill-runner.js';
 import type {
     ToolDefinition,
     ToolInfo,
@@ -11,40 +10,89 @@ import type {
     ResourceInfo,
     SkillDefinition,
     SkillInfo,
+    SkillGetResult,
+    SkillExecutionContext,
+    SkillExecutionResult,
     PromptDefinition,
     PromptInfo,
     HostInfo,
     RpcRequest,
     RpcResponse,
+    ITransport,
 } from './types.js';
 
 export interface PageMcpHostOptions {
     name: string;
     version: string;
+    /** If true, reject legacy non-standard RPC methods. */
+    strictProtocol?: boolean;
+    /** @deprecated Use `transport` instead. Kept for backward compatibility. */
     bus?: EventBus;
+    /** Transport layer for Host ↔ Client communication */
+    transport?: ITransport;
+    skills?: {
+        /** Allow executing inline JavaScript skill scripts (`scriptJs`). Disabled by default. */
+        allowInlineScriptExecution?: boolean;
+        requestUserInteraction?: (request: unknown) => Promise<unknown>;
+    };
 }
 
 /**
- * Page-side Host that registers Tools, Resources, and Skills
+ * Page-side Host that registers Tools, Resources, and Prompts
  * and handles incoming RPC requests from the AI Client.
  */
 export class PageMcpHost {
     private readonly info: HostInfo;
-    private readonly bus: EventBus;
+    private readonly transport: ITransport;
     private readonly tools = new Map<string, ToolDefinition>();
     private readonly resources = new Map<string, ResourceDefinition>();
     private readonly skills = new Map<string, SkillDefinition>();
     private readonly prompts = new Map<string, PromptDefinition>();
-    private readonly skillRunner = new SkillRunner();
+    private readonly strictProtocol: boolean;
+    private readonly allowInlineScriptExecution: boolean;
+    private readonly requestUserInteraction?: (request: unknown) => Promise<unknown>;
 
     constructor(options: PageMcpHostOptions) {
-        this.info = { name: options.name, version: options.version };
-        this.bus = options.bus ?? new EventBus();
+        this.info = {
+            name: options.name,
+            version: options.version,
+            capabilities: {
+                tools: { listChanged: true },
+                resources: { listChanged: true },
+                prompts: { listChanged: true },
+                extensions: {
+                    skills: {
+                        version: '1.0.0',
+                        execute: true,
+                        scriptExecution: options.skills?.allowInlineScriptExecution ? 'inline-js' : 'disabled',
+                    },
+                },
+            },
+        };
+        this.transport = options.transport ?? options.bus ?? new EventBus();
+        this.strictProtocol = options.strictProtocol ?? false;
+        this.allowInlineScriptExecution = options.skills?.allowInlineScriptExecution ?? false;
+        this.requestUserInteraction = options.skills?.requestUserInteraction;
     }
 
-    /** Get the shared EventBus (pass to PageMcpClient for same-context usage) */
+    /**
+     * Get the transport instance.
+     * If the transport is an EventBus, you can pass it directly to PageMcpClient
+     * for same-context usage.
+     */
+    getTransport(): ITransport {
+        return this.transport;
+    }
+
+    /** @deprecated Use getTransport() instead */
     getBus(): EventBus {
-        return this.bus;
+        if (this.transport instanceof EventBus) {
+            return this.transport;
+        }
+        throw new Error(
+            'getBus() is only available when using EventBus transport. ' +
+            'Use getTransport() instead for generic transport access.'
+        );
     }
 
     // ---- Registration ----
@@ -54,6 +102,16 @@ export class PageMcpHost {
             throw new Error(`Tool "${def.name}" is already registered`);
         }
         this.tools.set(def.name, def);
+        this.transport.emit('notifications/tools/list_changed', {});
+        return this;
+    }
+
+    unregisterTool(name: string): this {
+        if (!this.tools.has(name)) {
+            throw new Error(`Tool "${name}" is not registered`);
+        }
+        this.tools.delete(name);
+        this.transport.emit('notifications/tools/list_changed', {});
         return this;
     }
 
@@ -62,6 +120,16 @@ export class PageMcpHost {
             throw new Error(`Resource "${def.uri}" is already registered`);
         }
         this.resources.set(def.uri, def);
+        this.transport.emit('notifications/resources/list_changed', {});
+        return this;
+    }
+
+    unregisterResource(uri: string): this {
+        if (!this.resources.has(uri)) {
+            throw new Error(`Resource "${uri}" is not registered`);
+        }
+        this.resources.delete(uri);
+        this.transport.emit('notifications/resources/list_changed', {});
         return this;
     }
 
@@ -69,8 +137,18 @@ export class PageMcpHost {
         if (this.skills.has(def.name)) {
             throw new Error(`Skill "${def.name}" is already registered`);
         }
-        // Validate that all referenced tools exist or will exist
+        if (!def.name || !def.version || !def.skillMd) {
+            throw new Error('Skill name, version and skillMd are required');
+        }
         this.skills.set(def.name, def);
+        return this;
+    }
+
+    unregisterSkill(name: string): this {
+        if (!this.skills.has(name)) {
+            throw new Error(`Skill "${name}" is not registered`);
+        }
+        this.skills.delete(name);
         return this;
     }
 
@@ -79,25 +157,69 @@ export class PageMcpHost {
             throw new Error(`Prompt "${def.name}" is already registered`);
         }
         this.prompts.set(def.name, def);
+        this.transport.emit('notifications/prompts/list_changed', {});
+        return this;
+    }
+
+    unregisterPrompt(name: string): this {
+        if (!this.prompts.has(name)) {
+            throw new Error(`Prompt "${name}" is not registered`);
+        }
+        this.prompts.delete(name);
+        this.transport.emit('notifications/prompts/list_changed', {});
         return this;
     }
 
     // ---- Start listening ----
 
     start(): void {
-        this.bus.onRequest(async (request: RpcRequest): Promise<RpcResponse> => {
+        this.transport.onRequest(async (request: RpcRequest): Promise<RpcResponse> => {
             return this.handleRequest(request);
         });
 
         // Broadcast readiness
-        this.bus.emit('host:ready', this.info);
+        this.transport.emit('host:ready', this.info);
+
+        // Expose host globally for browser extension bridge discovery
+        if (typeof window !== 'undefined') {
+            const w = window as unknown as Record<string, unknown>;
+            if (!Array.isArray(w.__pageMcpHosts)) {
+                w.__pageMcpHosts = [];
+            }
+            (w.__pageMcpHosts as PageMcpHost[]).push(this);
+
+            window.dispatchEvent(new CustomEvent('page-mcp:host-ready', {
+                detail: { hostInfo: this.info, transport: this.transport },
+            }));
+        }
     }
 
     // ---- RPC Handler ----
 
     private async handleRequest(req: RpcRequest): Promise<RpcResponse> {
         try {
+            if (this.strictProtocol && this.isLegacyMethod(req.method)) {
+                return {
+                    id: req.id,
+                    error: { code: -32601, message: `Unknown method: ${req.method}` },
+                };
+            }
+
             switch (req.method) {
+                case 'initialize': {
+                    const protocolVersion =
+                        typeof req.params?.protocolVersion === 'string'
+                            ? req.params.protocolVersion
+                            : '2025-11-05';
+                    return {
+                        id: req.id,
+                        result: {
+                            protocolVersion,
+                            capabilities: this.info.capabilities ?? {},
+                            serverInfo: { name: this.info.name, version: this.info.version },
+                        },
+                    };
+                }
                 case 'ping':
                     return { id: req.id, result: { pong: true } };
 
@@ -106,14 +228,36 @@ export class PageMcpHost {
 
                 case 'listTools':
                     return { id: req.id, result: this.getToolInfoList() };
+                case 'tools/list': {
+                    const { cursor, limit } = (req.params ?? {}) as { cursor?: string; limit?: number };
+                    return { id: req.id, result: this.paginate(this.getToolInfoList(), cursor, limit) };
+                }
 
                 case 'callTool': {
-                    const { name, args } = (req.params ?? {}) as { name: string; args?: Record<string, unknown> };
-                    const result = await this.executeTool(name, args ?? {});
+                    const { name, args, arguments: toolArguments } = (req.params ?? {}) as {
+                        name: string;
+                        args?: Record<string, unknown>;
+                        arguments?: Record<string, unknown>;
+                    };
+                    const result = await this.executeTool(name, toolArguments ?? args ?? {});
+                    return { id: req.id, result };
+                }
+                case 'tools/call': {
+                    const { name, args, arguments: toolArguments } = (req.params ?? {}) as {
+                        name: string;
+                        args?: Record<string, unknown>;
+                        arguments?: Record<string, unknown>;
+                    };
+                    const result = await this.executeTool(name, toolArguments ?? args ?? {});
                     return { id: req.id, result };
                 }
 
                 case 'listResources':
+                case 'resources/list':
+                    if (req.method === 'resources/list') {
+                        const { cursor, limit } = (req.params ?? {}) as { cursor?: string; limit?: number };
+                        return { id: req.id, result: this.paginate(this.getResourceInfoList(), cursor, limit) };
+                    }
                     return { id: req.id, result: this.getResourceInfoList() };
 
                 case 'readResource': {
@@ -121,18 +265,46 @@ export class PageMcpHost {
                     const result = await this.executeResource(uri);
                     return { id: req.id, result };
                 }
-
-                case 'listSkills':
-                    return { id: req.id, result: this.getSkillInfoList() };
-
-                case 'executeSkill': {
-                    const { name, args } = (req.params ?? {}) as { name: string; args?: Record<string, unknown> };
-                    const result = await this.executeSkillByName(name, args ?? {});
+                case 'resources/read': {
+                    const { uri } = (req.params ?? {}) as { uri: string };
+                    const result = await this.executeResource(uri);
                     return { id: req.id, result };
                 }
 
                 case 'listPrompts':
+                case 'prompts/list':
+                    if (req.method === 'prompts/list') {
+                        const { cursor, limit } = (req.params ?? {}) as { cursor?: string; limit?: number };
+                        return { id: req.id, result: this.paginate(this.getPromptInfoList(), cursor, limit) };
+                    }
                     return { id: req.id, result: this.getPromptInfoList() };
+
+                case 'prompts/get': {
+                    const { name, args, arguments: promptArgs } = (req.params ?? {}) as {
+                        name: string;
+                        args?: Record<string, unknown>;
+                        arguments?: Record<string, unknown>;
+                    };
+                    const result = await this.executePromptByName(name, promptArgs ?? args ?? {});
+                    return { id: req.id, result };
+                }
+                case 'extensions/skills/list': {
+                    const { cursor, limit } = (req.params ?? {}) as { cursor?: string; limit?: number };
+                    return { id: req.id, result: this.paginate(this.getSkillInfoList(), cursor, limit) };
+                }
+                case 'extensions/skills/get': {
+                    const { name } = (req.params ?? {}) as { name: string };
+                    return { id: req.id, result: this.getSkillByName(name) };
+                }
+                case 'extensions/skills/execute': {
+                    const { name, args, arguments: skillArguments } = (req.params ?? {}) as {
+                        name: string;
+                        args?: Record<string, unknown>;
+                        arguments?: Record<string, unknown>;
+                    };
+                    const result = await this.executeSkillByName(name, skillArguments ?? args ?? {});
+                    return { id: req.id, result };
+                }
 
                 default:
                     return {
@@ -154,39 +326,77 @@ export class PageMcpHost {
     // ---- Internal helpers ----
 
     private getToolInfoList(): ToolInfo[] {
-        return Array.from(this.tools.values()).map(({ name, description, inputSchema, annotations }) => ({
+        return Array.from(this.tools.values()).map(({
             name,
+            title,
             description,
             inputSchema,
+            outputSchema,
+            securitySchemes,
+            annotations,
+        }) => ({
+            name,
+            title,
+            description,
+            inputSchema,
+            outputSchema,
+            securitySchemes,
             annotations,
         }));
     }
 
     private getResourceInfoList(): ResourceInfo[] {
-        return Array.from(this.resources.values()).map(({ uri, name, description }) => ({
+        return Array.from(this.resources.values()).map(({ uri, name, description, mimeType }) => ({
             uri,
             name,
             description,
-        }));
-    }
-
-    private getSkillInfoList(): SkillInfo[] {
-        return Array.from(this.skills.values()).map(({ name, description, inputSchema, steps }) => ({
-            name,
-            description,
-            inputSchema,
-            steps: steps.map((s) => s.name),
+            mimeType,
         }));
     }
 
     private getPromptInfoList(): PromptInfo[] {
-        return Array.from(this.prompts.values()).map(({ name, title, description, icon, prompt }) => ({
+        return Array.from(this.prompts.values()).map(({ name, description, arguments: promptArguments }) => ({
             name,
-            title,
             description,
-            icon,
-            prompt,
+            arguments: promptArguments,
         }));
+    }
+
+    private getSkillInfoList(): SkillInfo[] {
+        return Array.from(this.skills.values()).map(({
+            name,
+            version,
+            description,
+            scriptJs,
+            inputSchema,
+            outputSchema,
+            annotations,
+        }) => ({
+            name,
+            version,
+            description,
+            hasScript: typeof scriptJs === 'string' && scriptJs.length > 0,
+            inputSchema,
+            outputSchema,
+            annotations,
+        }));
+    }
+
+    private getSkillByName(name: string): SkillGetResult {
+        const skill = this.skills.get(name);
+        if (!skill) {
+            throw new Error(`Skill not found: ${name}`);
+        }
+        return {
+            name: skill.name,
+            version: skill.version,
+            description: skill.description,
+            skillMd: skill.skillMd,
+            hasScript: typeof skill.scriptJs === 'string' && skill.scriptJs.length > 0,
+            inputSchema: skill.inputSchema,
+            outputSchema: skill.outputSchema,
+            annotations: skill.annotations,
+        };
     }
 
     private async executeTool(name: string, args: Record<string, unknown>): Promise<unknown> {
@@ -194,7 +404,8 @@ export class PageMcpHost {
         if (!tool) {
             throw new Error(`Tool not found: ${name}`);
         }
-        return tool.execute(args);
+        const content = await tool.execute(args);
+        return { content };
     }
 
     private async executeResource(uri: string): Promise<unknown> {
@@ -202,27 +413,117 @@ export class PageMcpHost {
         if (!resource) {
             throw new Error(`Resource not found: ${uri}`);
         }
-        return resource.handler();
+        const result = await resource.handler();
+        if (
+            typeof result === 'object' &&
+            result !== null &&
+            'contents' in result &&
+            Array.isArray((result as { contents?: unknown }).contents)
+        ) {
+            return result;
+        }
+
+        return {
+            contents: [
+                {
+                    uri: resource.uri,
+                    mimeType: resource.mimeType ?? 'application/json',
+                    text: JSON.stringify(result),
+                },
+            ],
+        };
     }
 
-    private async executeSkillByName(name: string, args: Record<string, unknown>): Promise<unknown> {
+    private async executePromptByName(name: string, args: Record<string, unknown>): Promise<unknown> {
+        const prompt = this.prompts.get(name);
+        if (!prompt) {
+            throw new Error(`Prompt not found: ${name}`);
+        }
+        return prompt.handler(args);
+    }
+
+    private async executeSkillByName(name: string, args: Record<string, unknown>): Promise<SkillExecutionResult> {
         const skill = this.skills.get(name);
         if (!skill) {
             throw new Error(`Skill not found: ${name}`);
         }
 
-        // Verify all referenced tools exist
-        for (const step of skill.steps) {
-            if (!this.tools.has(step.tool)) {
-                throw new Error(`Skill "${name}" references unknown tool "${step.tool}" in step "${step.name}"`);
-            }
+        const context: SkillExecutionContext = {
+            callTool: (toolName, toolArgs) => this.executeTool(toolName, toolArgs ?? {}),
+            readResource: (uri) => this.executeResource(uri),
+            getPrompt: (promptName, promptArgs) => this.executePromptByName(promptName, promptArgs ?? {}),
+            requestUserInteraction: this.requestUserInteraction,
+        };
+
+        try {
+            const output = skill.run
+                ? await skill.run(context, args)
+                : await this.executeInlineSkillScript(skill, context, args);
+
+            return {
+                name: skill.name,
+                success: true,
+                output,
+            };
+        } catch (error) {
+            return {
+                name: skill.name,
+                success: false,
+                error: error instanceof Error ? error.message : String(error),
+            };
+        }
+    }
+
+    private async executeInlineSkillScript(
+        skill: SkillDefinition,
+        context: SkillExecutionContext,
+        input: Record<string, unknown>,
+    ): Promise<unknown> {
+        if (!skill.scriptJs) {
+            throw new Error(`Skill "${skill.name}" has no executable handler`);
+        }
+        if (!this.allowInlineScriptExecution) {
+            throw new Error('Inline JavaScript skill execution is disabled');
         }
 
-        return this.skillRunner.run(skill, args, (toolName, toolArgs) => this.executeTool(toolName, toolArgs));
+        const factory = new Function(`"use strict"; return (${skill.scriptJs});`);
+        const scriptFn = factory();
+        if (typeof scriptFn !== 'function') {
+            throw new Error(`Skill "${skill.name}" scriptJs must evaluate to a function`);
+        }
+        return scriptFn(context, input);
+    }
+
+    private paginate<T>(items: T[], cursor?: string, limit?: number): { items: T[]; nextCursor?: string } {
+        const start = Number(cursor ?? '0');
+        const safeStart = Number.isFinite(start) && start >= 0 ? start : 0;
+        const pageSize = typeof limit === 'number' && limit > 0 ? Math.floor(limit) : items.length;
+        const slice = items.slice(safeStart, safeStart + pageSize);
+        const next = safeStart + pageSize < items.length ? String(safeStart + pageSize) : undefined;
+        return { items: slice, nextCursor: next };
+    }
+
+    private isLegacyMethod(method: string): boolean {
+        return method === 'ping'
+            || method === 'getHostInfo'
+            || method === 'listTools'
+            || method === 'callTool'
+            || method === 'listResources'
+            || method === 'readResource'
+            || method === 'listPrompts';
     }
 
     /** Stop listening and clean up */
     destroy(): void {
-        this.bus.destroy();
+        // Remove from global registry
+        if (typeof window !== 'undefined') {
+            const w = window as unknown as Record<string, unknown>;
+            const hosts = w.__pageMcpHosts as PageMcpHost[] | undefined;
+            if (Array.isArray(hosts)) {
+                const idx = hosts.indexOf(this);
+                if (idx >= 0) hosts.splice(idx, 1);
+            }
+        }
+        this.transport.destroy();
     }
 }

@@ -69,6 +69,7 @@ const client = usePageMcpClient();
 |---|---|
 | `usePageMcpHost()` | Get the `PageMcpHost` instance |
 | `usePageMcpClient()` | Get the `PageMcpClient` instance |
+| `usePageMcpSkills()` | Get the Extensions skills client |
 | `usePageMcpBus()` | Get the `EventBus` instance |
 | `useRegisterTool(def)` | Register a tool (auto-cleanup on unmount) |
 | `useRegisterResource(def)` | Register a resource (auto-cleanup on unmount) |
