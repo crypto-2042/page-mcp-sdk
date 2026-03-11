@@ -11,11 +11,11 @@ importers:
   packages/chat:
     dependencies:
       '@page-mcp/core':
-        specifier: workspace:^
-        version: link:../core
+        specifier: ^3.1.0
+        version: 3.1.0
       '@page-mcp/protocol':
-        specifier: workspace:^
-        version: link:../protocol
+        specifier: ^3.1.0
+        version: 3.1.0
       dompurify:
         specifier: ^3.2.5
         version: 3.3.2
@@ -39,8 +39,8 @@ importers:
   packages/core:
     dependencies:
       '@page-mcp/protocol':
-        specifier: workspace:^
-        version: link:../protocol
+        specifier: ^3.1.0
+        version: 3.1.0
     devDependencies:
       tsup:
         specifier: ^8.0.0
@@ -67,12 +67,12 @@ importers:
   packages/react:
     dependencies:
       '@page-mcp/protocol':
-        specifier: workspace:^
-        version: link:../protocol
+        specifier: ^3.1.0
+        version: 3.1.0
     devDependencies:
       '@page-mcp/core':
-        specifier: workspace:^
-        version: link:../core
+        specifier: ^3.1.0
+        version: 3.1.0
       '@types/react':
         specifier: ^18.0.0
         version: 18.3.28
@@ -89,12 +89,12 @@ importers:
   packages/vue2:
     dependencies:
       '@page-mcp/protocol':
-        specifier: workspace:^
-        version: link:../protocol
+        specifier: ^3.1.0
+        version: 3.1.0
     devDependencies:
       '@page-mcp/core':
-        specifier: workspace:^
-        version: link:../core
+        specifier: ^3.1.0
+        version: 3.1.0
       tsup:
         specifier: ^8.0.0
         version: 8.5.1(postcss@8.5.8)(typescript@5.9.3)
@@ -108,12 +108,12 @@ importers:
   packages/vue3:
     dependencies:
       '@page-mcp/protocol':
-        specifier: workspace:^
-        version: link:../protocol
+        specifier: ^3.1.0
+        version: 3.1.0
     devDependencies:
       '@page-mcp/core':
-        specifier: workspace:^
-        version: link:../core
+        specifier: ^3.1.0
+        version: 3.1.0
       tsup:
         specifier: ^8.0.0
         version: 8.5.1(postcss@8.5.8)(typescript@5.9.3)
@@ -127,12 +127,12 @@ importers:
   packages/webmcp-adapter:
     dependencies:
       '@page-mcp/protocol':
-        specifier: workspace:^
-        version: link:../protocol
+        specifier: ^3.1.0
+        version: 3.1.0
     devDependencies:
       '@page-mcp/core':
-        specifier: workspace:^
-        version: link:../core
+        specifier: ^3.1.0
+        version: 3.1.0
       tsup:
         specifier: ^8.0.0
         version: 8.5.1(postcss@8.5.8)(typescript@5.9.3)
@@ -496,6 +496,12 @@ packages:
 
   '@jridgewell/trace-mapping@0.3.31':
     resolution: {integrity: sha512-zzNR+SdQSDJzc8joaeP8QQoCQr8NuYx2dIIytl1QeBEZHJ9uW6hebsrYgbz8hJwUQao3TWCMtmfV8Nu1twOLAw==}
+
+  '@page-mcp/core@3.1.0':
+    resolution: {integrity: sha512-W+wTnQ9pGpkT3FVDiP/r3p7AXziD3jWG032n8RMqJd9jGkS9cjQ6AXGMYBc2R5SdV27BQrAdWeAX0Wzn5Edg7g==}
+
+  '@page-mcp/protocol@3.1.0':
+    resolution: {integrity: sha512-G/dh3F5YGAJqbTHC2123y5B26IhlRKAu+YqRtSVJ8/T48EtXoXPt5VmRvzfZvQ81+jWgGKszTsRLIRXOzFNB/w==}
 
   '@rollup/rollup-android-arm-eabi@4.59.0':
     resolution: {integrity: sha512-upnNBkA6ZH2VKGcBj9Fyl9IGNPULcjXRlg0LLeaioQWueH30p6IXtJEbKAgvyv+mJaMxSm1l6xwDXYjpEMiLMg==}
@@ -1421,6 +1427,12 @@ snapshots:
     dependencies:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.5.5
+
+  '@page-mcp/core@3.1.0':
+    dependencies:
+      '@page-mcp/protocol': 3.1.0
+
+  '@page-mcp/protocol@3.1.0': {}
 
   '@rollup/rollup-android-arm-eabi@4.59.0':
     optional: true
