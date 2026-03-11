@@ -8,7 +8,6 @@ import {
     PageMcpClient,
     EventBus,
     type SkillDefinition,
-    type PromptDefinition,
     type HostInfo,
 } from '@page-mcp/core';
 import type {
