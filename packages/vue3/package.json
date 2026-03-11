@@ -1,6 +1,6 @@
 {
     "name": "@page-mcp/vue3",
-    "version": "2.0.0",
+    "version": "3.1.0",
     "description": "Vue 3 adapter for Page MCP SDK — Plugin + Composables",
     "license": "MIT",
     "keywords": [
@@ -33,14 +33,14 @@
     },
     "peerDependencies": {
         "vue": ">=3.2.0",
-        "@page-mcp/core": "^2.0.0"
+        "@page-mcp/core": "^3.1.0"
     },
     "dependencies": {
-        "@page-mcp/protocol": "workspace:^"
+        "@page-mcp/protocol": "^3.1.0"
     },
     "devDependencies": {
         "vue": "^3.4.0",
-        "@page-mcp/core": "workspace:^",
+        "@page-mcp/core": "^3.1.0",
         "tsup": "^8.0.0",
         "typescript": "^5.4.0"
     }

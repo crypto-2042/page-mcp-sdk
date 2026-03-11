@@ -1,6 +1,6 @@
 {
   "name": "@page-mcp/webmcp-adapter",
-  "version": "2.0.0",
+  "version": "3.1.0",
   "description": "WebMCP browser adapter for Page MCP core",
   "license": "MIT",
   "type": "module",
@@ -21,13 +21,13 @@
     "typecheck": "tsc --noEmit"
   },
   "peerDependencies": {
-    "@page-mcp/core": "^2.0.0"
+    "@page-mcp/core": "^3.1.0"
   },
   "dependencies": {
-    "@page-mcp/protocol": "workspace:^"
+    "@page-mcp/protocol": "^3.1.0"
   },
   "devDependencies": {
-    "@page-mcp/core": "workspace:^",
+    "@page-mcp/core": "^3.1.0",
     "tsup": "^8.0.0",
     "typescript": "^5.4.0"
   }
