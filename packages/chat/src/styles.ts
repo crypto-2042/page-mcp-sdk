@@ -197,6 +197,8 @@ export function generateStyles(theme: ChatTheme, accentColor: string): string {
             letter-spacing: -0.01em;
         }
 
+        .mcp-theme-btn,
+        .mcp-clear-btn,
         .mcp-close-btn {
             width: 32px;
             height: 32px;
@@ -214,6 +216,8 @@ export function generateStyles(theme: ChatTheme, accentColor: string): string {
             font-size: 16px;
         }
 
+        .mcp-theme-btn:hover,
+        .mcp-clear-btn:hover,
         .mcp-close-btn:hover {
             background: var(--mcp-bg-glass-hover);
             color: var(--mcp-text-primary);
@@ -225,28 +229,7 @@ export function generateStyles(theme: ChatTheme, accentColor: string): string {
             gap: 6px;
         }
 
-        .mcp-clear-btn {
-            width: 32px;
-            height: 32px;
-            border-radius: var(--mcp-radius-sm);
-            border: none;
-            background: var(--mcp-bg-glass);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            color: var(--mcp-text-secondary);
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all var(--mcp-transition);
-            font-size: 16px;
-        }
-
-        .mcp-clear-btn:hover {
-            background: var(--mcp-bg-glass-hover);
-            color: var(--mcp-text-primary);
-        }
-
+        .mcp-header-icon,
         .mcp-clear-icon {
             width: 16px;
             height: 16px;
@@ -441,7 +424,6 @@ export function generateStyles(theme: ChatTheme, accentColor: string): string {
             display: flex;
             align-items: center;
             gap: 8px;
-            margin-bottom: 6px;
         }
 
         .mcp-tool-icon {
@@ -464,6 +446,37 @@ export function generateStyles(theme: ChatTheme, accentColor: string): string {
             margin-left: auto;
         }
 
+        .mcp-tool-toggle {
+            width: 24px;
+            height: 24px;
+            padding: 0;
+            border: 1px solid var(--mcp-border);
+            border-radius: var(--mcp-radius-full);
+            background: transparent;
+            color: var(--mcp-text-secondary);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all var(--mcp-transition);
+        }
+
+        .mcp-tool-toggle:hover {
+            border-color: var(--mcp-accent);
+            color: var(--mcp-text-primary);
+        }
+
+        .mcp-tool-toggle-icon {
+            width: 16px;
+            height: 16px;
+            fill: currentColor;
+            transition: transform var(--mcp-transition);
+        }
+
+        .mcp-tool-toggle[aria-expanded="true"] .mcp-tool-toggle-icon {
+            transform: rotate(180deg);
+        }
+
         .mcp-tool-status.calling {
             background: rgba(250, 204, 21, 0.15);
             color: #facc15;
@@ -479,10 +492,28 @@ export function generateStyles(theme: ChatTheme, accentColor: string): string {
             color: #ef4444;
         }
 
+        .mcp-tool-result-wrap {
+            margin-top: 6px;
+        }
+
+        .mcp-tool-args-section {
+            margin-bottom: 10px;
+        }
+
+        .mcp-tool-args-label,
+        .mcp-tool-result-label {
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            color: var(--mcp-text-muted);
+            margin-bottom: 6px;
+        }
+
+        .mcp-tool-args,
         .mcp-tool-result {
             font-size: 12px;
             color: var(--mcp-text-secondary);
-            margin-top: 6px;
             padding: 8px;
             background: rgba(0,0,0,0.15);
             border-radius: var(--mcp-radius-sm);
@@ -584,10 +615,158 @@ export function generateStyles(theme: ChatTheme, accentColor: string): string {
             transform: none;
         }
 
+        .mcp-send-btn.stop-mode {
+            background: rgba(248, 113, 113, 0.16);
+            color: #f87171;
+            border: 1px solid rgba(248, 113, 113, 0.32);
+        }
+
+        .mcp-send-btn.stop-mode:hover {
+            background: rgba(248, 113, 113, 0.24);
+            transform: scale(1.05);
+        }
+
         .mcp-send-icon {
             width: 18px;
             height: 18px;
             fill: currentColor;
+        }
+
+        .mcp-resource-toggle-btn {
+            position: relative;
+            width: 38px;
+            height: 38px;
+            padding: 0;
+            border-radius: var(--mcp-radius-full);
+            border: 1px solid var(--mcp-border);
+            background: var(--mcp-bg-glass);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            color: var(--mcp-text-primary);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: var(--mcp-font);
+            transition: all var(--mcp-transition);
+        }
+
+        .mcp-resource-toggle-btn:hover {
+            background: var(--mcp-bg-glass-hover);
+            border-color: var(--mcp-accent);
+        }
+
+        .mcp-resource-icon {
+            width: 18px;
+            height: 18px;
+            fill: currentColor;
+        }
+
+        .mcp-resource-count {
+            position: absolute;
+            top: -4px;
+            right: -4px;
+            min-width: 16px;
+            height: 16px;
+            padding: 0 4px;
+            border-radius: 999px;
+            background: var(--mcp-accent);
+            color: #fff;
+            font-size: 10px;
+            font-weight: 700;
+            align-items: center;
+            justify-content: center;
+            line-height: 1;
+        }
+
+        .mcp-resource-panel {
+            padding: 12px 16px;
+            border-top: 1px solid var(--mcp-border-light);
+            background: var(--mcp-bg-secondary);
+            display: grid;
+            justify-items: start;
+            gap: 0;
+            max-height: 180px;
+            overflow-y: auto;
+        }
+
+        .mcp-resource-option {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            width: min(100%, 320px);
+            padding: 10px 12px;
+            border: 1px solid var(--mcp-border-light);
+            border-radius: 14px;
+            background: var(--mcp-bg-glass);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            transition: all var(--mcp-transition);
+        }
+
+        .mcp-resource-option + .mcp-resource-option {
+            margin-top: 10px;
+        }
+
+        .mcp-resource-option:hover {
+            border-color: var(--mcp-accent);
+            background: var(--mcp-bg-glass-hover);
+        }
+
+        .mcp-resource-checkbox {
+            appearance: none;
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 6px;
+            border: 1px solid var(--mcp-border);
+            background: rgba(0, 0, 0, 0.08);
+            box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.16);
+            position: relative;
+            flex-shrink: 0;
+            cursor: pointer;
+            transition: all var(--mcp-transition);
+        }
+
+        .mcp-resource-checkbox:hover {
+            border-color: var(--mcp-accent);
+        }
+
+        .mcp-resource-checkbox:checked {
+            background: var(--mcp-accent);
+            border-color: var(--mcp-accent);
+            box-shadow: 0 0 0 3px ${accentColor}22;
+        }
+
+        .mcp-resource-checkbox:checked::after {
+            content: '';
+            position: absolute;
+            left: 5px;
+            top: 2px;
+            width: 5px;
+            height: 9px;
+            border-right: 2px solid #fff;
+            border-bottom: 2px solid #fff;
+            transform: rotate(45deg);
+        }
+
+        .mcp-resource-meta {
+            display: grid;
+            gap: 1px;
+            min-width: 0;
+        }
+
+        .mcp-resource-name {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--mcp-text-primary);
+        }
+
+        .mcp-resource-empty {
+            font-size: 11px;
+            color: var(--mcp-text-muted);
+            word-break: break-all;
         }
 
         /* ====== Mobile Responsive ====== */
@@ -648,9 +827,9 @@ export function generateStyles(theme: ChatTheme, accentColor: string): string {
 
         /* ====== Prompt Shortcut Cards ====== */
         .mcp-prompts {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
+            display: grid;
+            justify-items: start;
+            gap: 10px;
             padding: 0 16px 12px;
             animation: mcp-msg-appear 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
@@ -663,8 +842,10 @@ export function generateStyles(theme: ChatTheme, accentColor: string): string {
             display: inline-flex;
             align-items: center;
             gap: 6px;
-            padding: 8px 14px;
-            border-radius: 999px;
+            justify-content: flex-start;
+            min-width: 180px;
+            padding: 10px 14px;
+            border-radius: 14px;
             border: 1px solid var(--mcp-border);
             background: var(--mcp-bg-glass);
             backdrop-filter: blur(12px);
@@ -675,7 +856,7 @@ export function generateStyles(theme: ChatTheme, accentColor: string): string {
             font-size: 13px;
             font-weight: 500;
             color: var(--mcp-text-primary);
-            white-space: nowrap;
+            text-align: left;
         }
 
         .mcp-prompt-card:hover {

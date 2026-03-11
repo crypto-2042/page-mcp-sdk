@@ -34,6 +34,9 @@
         "test": "pnpm exec vitest run",
         "test:watch": "pnpm exec vitest"
     },
+    "dependencies": {
+        "@page-mcp/protocol": "workspace:^"
+    },
     "devDependencies": {
         "tsup": "^8.0.0",
         "typescript": "^5.4.0",

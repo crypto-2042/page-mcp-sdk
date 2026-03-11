@@ -1,88 +1,73 @@
 # @page-mcp/vue3
 
-Vue 3 adapter for the Page MCP SDK. Provides a Plugin, Provider component, and Composables.
+Vue 3 integration package for Page MCP. Use it when you want Vue-native setup around Page MCP through a plugin, provider, and composables.
 
-> 🌐 **Live Preview:** [https://page-mcp.org](https://page-mcp.org)
+## What This Package Does
+
+- exposes a Vue 3 plugin for app-wide installation
+- exposes a provider component for subtree-scoped usage
+- exposes composables for host/client access and registration
+
+## When To Use It
+
+Use `@page-mcp/vue3` when:
+
+- your app is built with Vue 3
+- you want plugin or provider-style integration
+- you want registration through composables instead of manual host wiring
+
+Use `@page-mcp/core` directly outside Vue.
 
 ## Installation
 
 ```bash
-npm install @page-mcp/core @page-mcp/vue3
+npm install @page-mcp/core
+npm install @page-mcp/protocol
+npm install @page-mcp/vue3
 ```
 
-## Quick Start
+## Minimal Example
 
-### Option 1: Global Plugin (Recommended)
-
-```typescript
-// main.ts
+```ts
 import { createApp } from 'vue';
 import { PageMcpPlugin } from '@page-mcp/vue3';
 import App from './App.vue';
 
 const app = createApp(App);
-app.use(PageMcpPlugin, { name: 'my-app', version: '1.0' });
+app.use(PageMcpPlugin, { name: 'demo-app', version: '1.0.0' });
 app.mount('#app');
 ```
 
-### Option 2: Local Provider
-
-```vue
-<template>
-  <PageMcpProvider name="my-app" version="1.0">
-    <MyComponent />
-  </PageMcpProvider>
-</template>
-
-<script setup>
-import { PageMcpProvider } from '@page-mcp/vue3';
-</script>
-```
-
-### Register Tools in Components
-
 ```vue
 <script setup lang="ts">
-import { useRegisterTool, useRegisterResource, usePageMcpClient } from '@page-mcp/vue3';
+import { useRegisterTool } from '@page-mcp/vue3';
 
 useRegisterTool({
-  name: 'getFormData',
-  description: 'Get current form data',
-  inputSchema: { type: 'object', properties: {} },
-  execute: async () => ({ name: formData.name, email: formData.email })
+  name: 'search_products',
+  description: 'Search products by keyword',
+  execute: async (input) => [{ keyword: String(input.keyword ?? '') }],
 });
-
-useRegisterResource({
-  uri: 'page://form/data',
-  name: 'Form Data',
-  description: 'Current form field values',
-  handler: async () => ({ ...formData })
-});
-
-const client = usePageMcpClient();
 </script>
 ```
 
-## API
+## Core Exports
 
-| Composable | Description |
-|---|---|
-| `usePageMcpHost()` | Get the `PageMcpHost` instance |
-| `usePageMcpClient()` | Get the `PageMcpClient` instance |
-| `usePageMcpSkills()` | Get the Extensions skills client |
-| `usePageMcpBus()` | Get the `EventBus` instance |
-| `useRegisterTool(def)` | Register a tool (auto-cleanup on unmount) |
-| `useRegisterResource(def)` | Register a resource (auto-cleanup on unmount) |
-| `useRegisterSkill(def)` | Register a skill (auto-cleanup on unmount) |
+- `PageMcpPlugin`
+- `PageMcpProvider`
+- `usePageMcpHost()`
+- `usePageMcpClient()`
+- `usePageMcpBus()`
+- `usePageMcpSkills()`
+- `useRegisterTool()`
+- `useRegisterResource()`
+- `useRegisterPrompt()`
+- `useRegisterSkill()`
 
-## How It Works
+## Relationship To Other Packages
 
-- `PageMcpPlugin` / `PageMcpProvider` creates `EventBus`, `PageMcpHost`, and `PageMcpClient` instances and provides them via Vue's `provide/inject`.
-- Composables (`useRegisterTool`, etc.) register capabilities on mount and automatically clean up via `onUnmounted`.
-- The Host is started automatically when the Plugin is installed or Provider is mounted.
+- `@page-mcp/core`
+  - runtime implementation
+- `@page-mcp/protocol`
+  - protocol types for registration and metadata
 
-For detailed documentation, see the [main README](../../README.md#vue-3-page-mcpvue3).
-
-## License
-
-MIT
+Use this package for Vue 3 ergonomics, not as a standalone runtime.

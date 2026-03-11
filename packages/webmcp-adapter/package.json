@@ -23,6 +23,9 @@
   "peerDependencies": {
     "@page-mcp/core": "^2.0.0"
   },
+  "dependencies": {
+    "@page-mcp/protocol": "workspace:^"
+  },
   "devDependencies": {
     "@page-mcp/core": "workspace:^",
     "tsup": "^8.0.0",

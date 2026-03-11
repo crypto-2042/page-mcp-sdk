@@ -151,6 +151,18 @@
       line-height: 1.6
     }
 
+    .hero-note {
+      margin: 16px auto 0;
+      max-width: 680px;
+      padding: 12px 16px;
+      border-radius: 12px;
+      border: 1px solid var(--bdr);
+      background: rgba(99, 102, 241, .08);
+      color: var(--t2);
+      font-size: 13px;
+      line-height: 1.6
+    }
+
     /* === PRODUCT GRID === */
     .products {
       max-width: 1200px;
@@ -867,6 +879,9 @@
     <h1>Smart Shopping, Powered by AI</h1>
     <p>Browse products with AI-powered MCP tools. The AI assistant knows your cart, stock levels and can place orders
       for you.</p>
+    <div class="hero-note">Try the chat widget in <strong style="color:var(--t1)">Light</strong> theme from settings
+      or by using the theme icon in the chat header. While a reply is in progress, the send button becomes a stop icon
+      so you can interrupt the current turn.</div>
   </section>
 
   <div class="products" id="products"></div>
@@ -904,7 +919,8 @@
   <div class="modal-bg" id="settings-modal" onclick="if(event.target===this)closeSettings()">
     <div class="modal">
       <h2>⚙️ AI Chat Widget Settings</h2>
-      <div class="sub">Configure the embedded AI assistant. Changes apply on save.</div>
+      <div class="sub">Configure the embedded AI assistant. Changes apply on save. You can also switch dark/light theme
+        from the chat header and stop an in-flight reply from the send button.</div>
       <div class="modal-grid">
         <div class="field"><label>API Key</label><input type="password" id="cfg-apikey" placeholder="sk-..."></div>
         <div class="field"><label>Base URL</label><input type="text" id="cfg-baseurl"
@@ -932,7 +948,8 @@
   <div class="modal-bg" id="mcp-modal" onclick="if(event.target===this)closeMcpDebug()">
     <div class="modal" style="width:800px">
       <h2>🔧 MCP Debug Console</h2>
-      <div class="sub">Registered tools, resources, skills and RPC traffic</div>
+      <div class="sub">Registered tools, resources, prompts and RPC traffic. Use the real chat UI to verify theme
+        switching, prompt shortcuts, explicit resources, and stop-response behavior.</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
         <div>
           <div class="mcp-section">
@@ -942,10 +959,6 @@
           <div class="mcp-section">
             <h3>📂 Resources <span class="cart-badge" id="mcp-res-cnt" style="background:var(--green)">0</span></h3>
             <div id="mcp-resources"></div>
-          </div>
-          <div class="mcp-section">
-            <h3>🚀 Skills <span class="cart-badge" id="mcp-skill-cnt" style="background:var(--purple)">0</span></h3>
-            <div id="mcp-skills"></div>
           </div>
           <div class="mcp-section">
             <h3>💬 Prompts <span class="cart-badge" id="mcp-prompt-cnt" style="background:var(--yellow)">0</span></h3>
@@ -963,11 +976,9 @@
             <div style="display:flex;flex-wrap:wrap;gap:4px">
               <button class="mbtn" onclick="qTest('listTools')">List Tools</button>
               <button class="mbtn" onclick="qTest('listResources')">List Resources</button>
-              <button class="mbtn" onclick="qTest('listSkills')">List Skills</button>
-              <button class="mbtn" onclick="qTest('verifySkills')">Verify Skills</button>
               <button class="mbtn" onclick="qTest('listPrompts')">List Prompts</button>
-              <button class="mbtn" onclick="qTest('readCart')">Read Cart</button>
-              <button class="mbtn" onclick="qTest('readCatalog')">Read Catalog</button>
+              <button class="mbtn" onclick="qTest('readProductNames')">Read Product Names</button>
+              <button class="mbtn" onclick="qTest('readCartSummary')">Read Cart Summary</button>
             </div>
             <div id="mcp-result" style="margin-top:8px"></div>
           </div>
@@ -1019,23 +1030,10 @@
 
     // ---- READ Tools ----
     host.registerTool({
-      name: 'getProductList', description: 'Get all available products with name, price, stock, and description',
-      inputSchema: { type: 'object', properties: {} }, annotations: { readOnlyHint: true },
-      execute: async () => store.products.map(p => ({ name: p.name, category: p.category, price: '$' + p.price, stock: p.stock, inStock: p.stock > 0 })),
-    });
-
-    host.registerTool({
       name: 'getProductInfo', description: 'Get detailed info for a product by name (e.g. "Wireless Headphones")',
       inputSchema: { type: 'object', properties: { productName: { type: 'string', description: 'Product name or partial name, e.g. "headphones"' } }, required: ['productName'] },
       annotations: { readOnlyHint: true },
       execute: async (i) => { const p = findProduct(i.productName); if (!p) throw new Error('Product not found: ' + i.productName); return { name: p.name, category: p.category, price: '$' + p.price, originalPrice: p.originalPrice ? '$' + p.originalPrice : null, stock: p.stock, inStock: p.stock > 0, description: p.desc }; },
-    });
-
-    host.registerTool({
-      name: 'checkStock', description: 'Check stock availability for a product by name',
-      inputSchema: { type: 'object', properties: { productName: { type: 'string', description: 'Product name' } }, required: ['productName'] },
-      annotations: { readOnlyHint: true },
-      execute: async (i) => { const p = findProduct(i.productName); if (!p) throw new Error('Product not found: ' + i.productName); return { name: p.name, stock: p.stock, available: p.stock > 0, status: p.stock === 0 ? 'Out of Stock' : p.stock <= 5 ? 'Low Stock' : 'In Stock' }; },
     });
 
     host.registerTool({
@@ -1052,18 +1050,6 @@
       execute: async (i) => { const p = findProduct(i.productName); if (!p) throw new Error('Product not found: ' + i.productName); const qty = Number(i.quantity) || 1; if (p.stock < qty) throw new Error(`Only ${p.stock} "${p.name}" in stock`); const existing = store.cart.find(c => c.name === p.name); if (existing) { existing.quantity += qty } else { store.cart.push({ name: p.name, productId: p.id, quantity: qty, price: p.price, emoji: p.emoji }) } renderCart(); renderProducts(); toast('success', `Added ${qty}× ${p.name} to cart`); return { success: true, message: `Added ${qty}× ${p.name} to cart`, cartTotal: store.cart.reduce((s, c) => s + c.price * c.quantity, 0) }; },
     });
 
-    host.registerTool({
-      name: 'removeFromCart', description: 'Remove a product from the cart by name',
-      inputSchema: { type: 'object', properties: { productName: { type: 'string' } }, required: ['productName'] },
-      execute: async (i) => { const idx = store.cart.findIndex(c => c.name.toLowerCase().includes(i.productName.toLowerCase())); if (idx === -1) throw new Error('Product not in cart'); const removed = store.cart.splice(idx, 1)[0]; renderCart(); renderProducts(); toast('info', `Removed ${removed.name} from cart`); return { success: true, removed: removed.name }; },
-    });
-
-    host.registerTool({
-      name: 'getCartContents', description: 'View current shopping cart contents and total',
-      inputSchema: { type: 'object', properties: {} }, annotations: { readOnlyHint: true },
-      execute: async () => ({ items: store.cart.map(c => ({ name: c.name, quantity: c.quantity, unitPrice: '$' + c.price, subtotal: '$' + (c.price * c.quantity).toFixed(2) })), total: '$' + store.cart.reduce((s, c) => s + c.price * c.quantity, 0).toFixed(2), itemCount: store.cart.reduce((s, c) => s + c.quantity, 0) }),
-    });
-
     // ---- EXECUTE Tools ----
     host.registerTool({
       name: 'placeOrder', description: 'Place an order for all items currently in the cart. Checks stock and processes the order.',
@@ -1071,158 +1057,48 @@
       execute: async () => { if (!store.cart.length) throw new Error('Cart is empty'); for (const item of store.cart) { const p = findProduct(item.name); if (!p || p.stock < item.quantity) throw new Error(`Insufficient stock for "${item.name}": need ${item.quantity}, have ${p ? p.stock : 0}`); } const total = store.cart.reduce((s, c) => s + c.price * c.quantity, 0); const orderId = 'ORD-' + Math.random().toString(36).substring(2, 8).toUpperCase(); for (const item of store.cart) { const p = findProduct(item.name); p.stock -= item.quantity; } const order = { id: orderId, items: store.cart.map(c => ({ name: c.name, qty: c.quantity, price: c.price })), total, status: 'confirmed', time: new Date().toLocaleTimeString() }; store.orders.unshift(order); store.cart = []; renderCart(); renderProducts(); renderOrders(); toast('success', `Order ${orderId} placed! Total: $${total.toFixed(2)}`); return { orderId, total: '$' + total.toFixed(2), status: 'confirmed', items: order.items.map(i => i.qty + '× ' + i.name).join(', ') }; },
     });
 
-    host.registerTool({
-      name: 'quickBuy', description: 'Quickly buy a product by name — adds to cart and places order in one step',
-      inputSchema: { type: 'object', properties: { productName: { type: 'string' }, quantity: { type: 'number', description: 'Default: 1' } }, required: ['productName'] },
-      execute: async (i) => { const p = findProduct(i.productName); if (!p) throw new Error('Product not found: ' + i.productName); const qty = Number(i.quantity) || 1; if (p.stock < qty) throw new Error(`Insufficient stock for "${p.name}": need ${qty}, have ${p.stock}`); p.stock -= qty; const total = p.price * qty; const orderId = 'ORD-' + Math.random().toString(36).substring(2, 8).toUpperCase(); store.orders.unshift({ id: orderId, items: [{ name: p.name, qty, price: p.price }], total, status: 'confirmed', time: new Date().toLocaleTimeString() }); renderProducts(); renderOrders(); toast('success', `Quick order ${orderId}: ${qty}× ${p.name} — $${total.toFixed(2)}`); return { orderId, product: p.name, quantity: qty, total: '$' + total.toFixed(2), status: 'confirmed' }; },
-    });
-
     // ---- RESOURCES ----
-    host.registerResource({ uri: 'page://cart', name: 'Shopping Cart', description: 'Current cart contents and total', handler: async () => ({ items: store.cart, total: '$' + store.cart.reduce((s, c) => s + c.price * c.quantity, 0).toFixed(2) }) });
-    host.registerResource({ uri: 'page://products', name: 'Product Catalog', description: 'All products with stock info', handler: async () => ({ products: store.products.map(p => ({ name: p.name, price: '$' + p.price, stock: p.stock, category: p.category })) }) });
-    host.registerResource({ uri: 'page://orders', name: 'Order History', description: 'Past orders', handler: async () => ({ orders: store.orders }) });
-
-    // ---- SKILLS ----
-    host.registerSkill({
-      name: 'smartOrder',
-      version: '1.0.0',
-      description: 'Smart order: find product by name → check stock → add to cart → place order. Handles everything automatically.',
-      skillMd: `---
-name: smartOrder
-description: Smart order workflow
-version: 1.0.0
----
-
-Find product, verify stock, add to cart, then place order.`,
-      inputSchema: { type: 'object', properties: { productName: { type: 'string', description: 'Product name' }, quantity: { type: 'number', description: 'Quantity (default: 1)' } }, required: ['productName'] },
-      run: async (ctx, input) => {
-        const qty = Number(input.quantity || 1);
-        const product = await ctx.callTool('getProductInfo', { productName: input.productName });
-        const productName = product.content.name;
-        const stock = await ctx.callTool('checkStock', { productName });
-        if (!stock.content.available || stock.content.stock < qty) {
-          throw new Error('Insufficient stock for this order');
-        }
-        await ctx.callTool('addToCart', { productName, quantity: qty });
-        return ctx.callTool('placeOrder', {});
-      },
+    host.registerResource({
+      uri: 'page://selector/.product-name',
+      name: 'Visible Product Names',
+      description: 'Names of products currently visible in the product grid',
+      mimeType: 'application/json',
     });
-
-    host.registerSkill({
-      name: 'compareProducts',
-      version: '1.0.0',
-      description: 'Compare two products side by side',
-      skillMd: `---
-name: compareProducts
-description: Compare two products
-version: 1.0.0
----
-
-Fetch two product infos and return a comparison view.`,
-      inputSchema: { type: 'object', properties: { product1: { type: 'string' }, product2: { type: 'string' } }, required: ['product1', 'product2'] },
-      run: async (ctx, input) => {
-        const info1 = await ctx.callTool('getProductInfo', { productName: input.product1 });
-        const info2 = await ctx.callTool('getProductInfo', { productName: input.product2 });
-        return { left: info1.content, right: info2.content };
-      },
+    host.registerResource({
+      uri: 'page://selector/.product-price',
+      name: 'Visible Product Prices',
+      description: 'Displayed prices for products currently visible in the product grid',
+      mimeType: 'application/json',
     });
-
-    // Validation skill for demo-page skills capability checks
-    host.registerSkill({
-      name: 'verifyDemoSkills',
-      version: '1.0.0',
-      description: 'Validate that skills extension and MCP calls work end-to-end in this demo page',
-      skillMd: `---
-name: verifyDemoSkills
-description: Validate demo skills pipeline
-version: 1.0.0
----
-
-Run a read-only verification for tools/resources/prompts calls from a skill context.`,
-      inputSchema: {
-        type: 'object',
-        properties: {
-          productName: { type: 'string', description: 'Optional product name for stock check' },
-        },
-      },
-      run: async (ctx, input) => {
-        const productName = String(input.productName || 'Wireless Headphones');
-        const tools = await ctx.callTool('getProductList', {});
-        const stock = await ctx.callTool('checkStock', { productName });
-        const catalog = await ctx.readResource('page://products');
-        const prompt = await ctx.getPrompt('recommend-products', {});
-
-        const checks = {
-          toolsCallOk: Array.isArray(tools.content) && tools.content.length > 0,
-          stockCallOk: typeof stock.content?.stock === 'number',
-          resourceReadOk: Array.isArray(catalog.contents),
-          promptGetOk: Array.isArray(prompt.messages) && prompt.messages.length > 0,
-        };
-
-        return {
-          passed: Object.values(checks).every(Boolean),
-          checks,
-          sample: {
-            productName,
-            stock: stock.content,
-            promptPreview: prompt.messages?.[0]?.content?.text || '',
-          },
-          timestamp: new Date().toISOString(),
-        };
-      },
+    host.registerResource({
+      uri: 'page://selector/#cart-total',
+      name: 'Cart Summary Text',
+      description: 'Current cart total summary shown in the cart drawer',
+      mimeType: 'text/plain',
     });
-
     // ---- PROMPTS (AI Quick Actions) ----
     const promptTextMap = {
       'recommend-products': 'Based on the available products, recommend the top 3 best-value products and explain why they are worth buying.',
-      'compare-all': 'Compare all available products in a table format, listing name, price, stock status, and a brief pros/cons for each.',
       'deal-finder': 'Find all products that are currently on sale (have a discounted price) and tell me how much I can save on each one.',
       'cart-summary': 'Check my current shopping cart and give me a summary. If it is empty, suggest some products I might like.',
-      'gift-ideas': 'I am looking for a gift for a tech enthusiast. Can you recommend some cool gadgets from the catalog under $300?',
-      'tech-support': 'I need some help choosing the right product. Could you ask me a few questions to narrow down what I need?',
     };
 
     function registerPromptShortcut(name, description) {
       host.registerPrompt({
         name,
         description,
-        handler: async () => ({
-          messages: [{ role: 'user', content: { type: 'text', text: promptTextMap[name] } }],
-        }),
+        messages: [{ role: 'user', content: { type: 'text', text: promptTextMap[name] } }],
       });
     }
 
     registerPromptShortcut('recommend-products', 'Ask AI to recommend popular products');
-    registerPromptShortcut('compare-all', 'Ask AI to compare products');
     registerPromptShortcut('deal-finder', 'Find products on sale');
     registerPromptShortcut('cart-summary', 'Get a summary of the current shopping cart');
-    registerPromptShortcut('gift-ideas', 'Recommend gift ideas');
-    registerPromptShortcut('tech-support', 'Get help with a product');
 
     host.start();
 
     // Client
     const client = new PageMcpCore.PageMcpClient({ bus });
-    function createCompatibleSkillsClient(c) {
-      const v2Factory = PageMcpCore?.Extensions?.createSkillsClient;
-      const legacyFactory = PageMcpCore?.createSkillsClient;
-      const factory = typeof v2Factory === 'function'
-        ? v2Factory
-        : typeof legacyFactory === 'function'
-          ? legacyFactory
-          : null;
-      if (!factory) {
-        console.warn('[Demo] Skills extension is unavailable in current @page-mcp/core bundle.');
-        return {
-          list: async () => [],
-          execute: async () => {
-            throw new Error('Skills extension unavailable. Please hard refresh or update @page-mcp/core bundle.');
-          },
-        };
-      }
-      return factory(c);
-    }
-    const skillsClient = createCompatibleSkillsClient(client);
     bus.on('rpc:request', d => rpcLog('req', d.method, d.params));
     bus.on('rpc:response', d => d.error ? rpcLog('err', 'ERROR', d.error) : rpcLog('res', 'RESULT', d.result));
 
@@ -1312,6 +1188,7 @@ Run a read-only verification for tools/resources/prompts calls from a skill cont
 
       const cfg = {
         bus, position, theme, accentColor, title,
+        defaultAttachedResources: ['page://selector/.product-name', 'page://selector/#cart-total'],
         welcomeMessage: 'Hi! 👋 I\'m TechMart AI. I can help you find products, check stock, manage your cart, and place orders. Just ask!'
       };
       if (apiKey) { cfg.openai = { apiKey, model: model || 'gpt-5.2' }; if (baseUrl) cfg.openai.baseURL = baseUrl; }
@@ -1327,34 +1204,26 @@ Run a read-only verification for tools/resources/prompts calls from a skill cont
 
     function renderMcpDebug() {
       const tools = [
-        { nm: 'getProductList', ds: 'List all products', t: 'r' }, { nm: 'getProductInfo', ds: 'Get details by name', t: 'r' },
-        { nm: 'checkStock', ds: 'Check stock by name', t: 'r' }, { nm: 'searchProducts', ds: 'Search by keyword/category/price', t: 'r' },
-        { nm: 'addToCart', ds: 'Add product to cart by name', t: 'w' }, { nm: 'removeFromCart', ds: 'Remove from cart by name', t: 'w' },
-        { nm: 'getCartContents', ds: 'View cart contents', t: 'r' }, { nm: 'placeOrder', ds: 'Place order for cart items', t: 'x' },
-        { nm: 'quickBuy', ds: 'One-step buy by product name', t: 'x' },
+        { nm: 'searchProducts', ds: 'Search by keyword/category/price', t: 'r' },
+        { nm: 'getProductInfo', ds: 'Get details by name', t: 'r' },
+        { nm: 'addToCart', ds: 'Add product to cart by name', t: 'w' },
+        { nm: 'placeOrder', ds: 'Place order for cart items', t: 'x' },
       ];
       document.getElementById('mcp-tools').innerHTML = tools.map(t => `<div class="mcp-item"><span class="nm">${t.nm}()</span><span class="tag tag-${t.t}">${t.t === 'r' ? 'read' : t.t === 'w' ? 'write' : 'exec'}</span><div class="ds">${t.ds}</div></div>`).join('');
       document.getElementById('mcp-tool-cnt').textContent = tools.length;
 
-      const res = [{ uri: 'page://cart', nm: 'Shopping Cart' }, { uri: 'page://products', nm: 'Product Catalog' }, { uri: 'page://orders', nm: 'Order History' }];
+      const res = [
+        { uri: 'page://selector/.product-name', nm: 'Visible Product Names' },
+        { uri: 'page://selector/.product-price', nm: 'Visible Product Prices' },
+        { uri: 'page://selector/#cart-total', nm: 'Cart Summary Text' },
+      ];
       document.getElementById('mcp-resources').innerHTML = res.map(r => `<div class="mcp-item"><span class="nm">${r.nm}</span><div class="ds">${r.uri}</div></div>`).join('');
       document.getElementById('mcp-res-cnt').textContent = res.length;
 
-      const skills = [
-        { nm: 'smartOrder', ds: 'Find → Stock → Cart → Order (auto)' },
-        { nm: 'compareProducts', ds: 'Compare two products side by side' },
-        { nm: 'verifyDemoSkills', ds: 'Run end-to-end skills validation checks' },
-      ];
-      document.getElementById('mcp-skills').innerHTML = skills.map(s => `<div class="mcp-item"><span class="nm">${s.nm}</span><div class="ds">${s.ds}</div></div>`).join('');
-      document.getElementById('mcp-skill-cnt').textContent = skills.length;
-
       const prompts = [
         { nm: 'recommend-products', ds: 'Recommend popular products', icon: '⭐' },
-        { nm: 'compare-all', ds: 'Compare all products in a table', icon: '⚖️' },
         { nm: 'deal-finder', ds: 'Find sale products', icon: '🏷️' },
         { nm: 'cart-summary', ds: 'Summarize shopping cart', icon: '🛒' },
-        { nm: 'gift-ideas', ds: 'Recommend gift ideas', icon: '🎁' },
-        { nm: 'tech-support', ds: 'Get help with a product', icon: '🔧' },
       ];
       document.getElementById('mcp-prompts').innerHTML = prompts.map(p => `<div class="mcp-item"><span class="nm">${p.icon} ${p.nm}</span><div class="ds">${p.ds}</div></div>`).join('');
       document.getElementById('mcp-prompt-cnt').textContent = prompts.length;
@@ -1366,11 +1235,9 @@ Run a read-only verification for tools/resources/prompts calls from a skill cont
         let r;
         if (action === 'listTools') r = await client.toolsList();
         else if (action === 'listResources') r = await client.resourcesList();
-        else if (action === 'listSkills') r = await skillsClient.list();
-        else if (action === 'verifySkills') r = await skillsClient.execute('verifyDemoSkills', {});
         else if (action === 'listPrompts') r = await client.promptsList();
-        else if (action === 'readCart') r = await client.resourcesRead('page://cart');
-        else if (action === 'readCatalog') r = await client.resourcesRead('page://products');
+        else if (action === 'readProductNames') r = await client.resourcesRead('page://selector/.product-name');
+        else if (action === 'readCartSummary') r = await client.resourcesRead('page://selector/#cart-total');
         area.innerHTML = `<div style="background:var(--bg);border:1px solid var(--bdr);border-radius:8px;padding:8px;margin-top:6px;max-height:180px;overflow:auto"><pre style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--cyan);white-space:pre-wrap">${JSON.stringify(r, null, 2)}</pre></div>`;
       } catch (e) { area.innerHTML = `<div style="color:var(--red);font-size:11px">${e.message}</div>` }
     };
@@ -1409,6 +1276,7 @@ Run a read-only verification for tools/resources/prompts calls from a skill cont
     const savedCfg = loadSavedSettings();
     const initChatConfig = {
       bus, position: savedCfg?.position || 'bottom-right', theme: savedCfg?.theme || 'dark',
+      defaultAttachedResources: ['page://selector/.product-name', 'page://selector/#cart-total'],
       accentColor: savedCfg?.accentColor || '#6366f1', title: savedCfg?.title || 'TechMart AI',
       welcomeMessage: 'Hi! 👋 I\'m your TechMart AI assistant. I can help you:\n• 🔍 Search & browse products\n• 📦 Check stock availability\n• 🛒 Manage your cart\n• 🚀 Place orders\n\nJust ask me anything!'
     };

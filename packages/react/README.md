@@ -1,97 +1,74 @@
 # @page-mcp/react
 
-React adapter for the Page MCP SDK. Provides a Provider component and Hooks for seamless integration.
+React integration package for Page MCP. Use it when you want React-native setup around `PageMcpHost` and `PageMcpClient` through a provider and hooks.
 
-> 🌐 **Live Preview:** [https://page-mcp.org](https://page-mcp.org)
+## What This Package Does
+
+- creates a React provider around Page MCP runtime objects
+- exposes hooks for host/client access
+- exposes hooks for registering tools, resources, prompts, and skills
+
+## When To Use It
+
+Use `@page-mcp/react` when:
+
+- your app is built with React
+- you want Page MCP lifecycle to follow React component lifecycle
+- you want resource/tool/prompt registration through hooks instead of manual wiring
+
+Use `@page-mcp/core` directly when you are not in React.
 
 ## Installation
 
 ```bash
-npm install @page-mcp/core @page-mcp/react
+npm install @page-mcp/core
+npm install @page-mcp/protocol
+npm install @page-mcp/react
 ```
 
-## Quick Start
-
-### 1. Wrap Your App with Provider
+## Minimal Example
 
 ```tsx
-import { PageMcpProvider } from '@page-mcp/react';
+import { PageMcpProvider, useRegisterTool, usePageMcpClient } from '@page-mcp/react';
 
-function App() {
+function ProductPage() {
+  useRegisterTool({
+    name: 'search_products',
+    description: 'Search products by keyword',
+    execute: async (input) => [{ keyword: String(input.keyword ?? '') }],
+  });
+
+  const client = usePageMcpClient();
+
+  return <button onClick={() => client.toolsList()}>Inspect tools</button>;
+}
+
+export function App() {
   return (
-    <PageMcpProvider name="my-app" version="1.0">
-      <MyPage />
+    <PageMcpProvider name="demo-app" version="1.0.0">
+      <ProductPage />
     </PageMcpProvider>
   );
 }
 ```
 
-### 2. Register Tools in Components
+## Core Exports
 
-```tsx
-import { useRegisterTool, useRegisterResource } from '@page-mcp/react';
+- `PageMcpProvider`
+- `usePageMcpHost()`
+- `usePageMcpClient()`
+- `usePageMcpBus()`
+- `useRegisterTool()`
+- `useRegisterResource()`
+- `useRegisterPrompt()`
+- `useRegisterSkill()`
+- `usePageMcpSkills()`
 
-function ProductPage() {
-  useRegisterTool({
-    name: 'searchProducts',
-    description: 'Search the product catalog',
-    inputSchema: {
-      type: 'object',
-      properties: { keyword: { type: 'string' } },
-      required: ['keyword']
-    },
-    execute: async (input) => products.filter(p => p.name.includes(input.keyword)),
-  });
+## Relationship To Other Packages
 
-  useRegisterResource({
-    uri: 'page://products',
-    name: 'Product List',
-    description: 'All products on this page',
-    handler: async () => ({ products })
-  });
+- `@page-mcp/core`
+  - runtime implementation
+- `@page-mcp/protocol`
+  - protocol types for registrations and metadata
 
-  return <div>{/* UI */}</div>;
-}
-```
-
-### 3. Use Client for AI Integration
-
-```tsx
-import { usePageMcpClient } from '@page-mcp/react';
-
-function AIWidget() {
-  const client = usePageMcpClient();
-
-  const handleClick = async () => {
-    const tools = await client.toolsList();
-    const result = await client.toolsCall('searchProducts', { keyword: 'headphones' });
-    console.log(result);
-  };
-
-  return <button onClick={handleClick}>Ask AI</button>;
-}
-```
-
-## API
-
-| Hook | Description |
-|---|---|
-| `usePageMcpHost()` | Get the `PageMcpHost` instance |
-| `usePageMcpClient()` | Get the `PageMcpClient` instance |
-| `usePageMcpSkills()` | Get the Extensions skills client |
-| `usePageMcpBus()` | Get the `EventBus` instance |
-| `useRegisterTool(def)` | Register a tool (auto-cleanup on unmount) |
-| `useRegisterResource(def)` | Register a resource (auto-cleanup on unmount) |
-| `useRegisterSkill(def)` | Register a skill (auto-cleanup on unmount) |
-
-## How It Works
-
-- `PageMcpProvider` creates `EventBus`, `PageMcpHost`, and `PageMcpClient` instances and provides them via React Context.
-- `useRegisterTool` / `useRegisterResource` / `useRegisterSkill` / `useRegisterPrompt` register capabilities on mount and automatically clean up on unmount.
-- The Host is started automatically when the Provider mounts.
-
-For detailed documentation, see the [main README](../../README.md#react-page-mcpreact).
-
-## License
-
-MIT
+Use this package for React ergonomics, not as a replacement for `core`.

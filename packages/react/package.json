@@ -34,6 +34,9 @@
         "react": ">=17.0.0",
         "@page-mcp/core": "^2.0.0"
     },
+    "dependencies": {
+        "@page-mcp/protocol": "workspace:^"
+    },
     "devDependencies": {
         "react": "^18.0.0",
         "@types/react": "^18.0.0",

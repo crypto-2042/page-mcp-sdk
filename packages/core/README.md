@@ -1,278 +1,224 @@
 # @page-mcp/core
 
-Core package for the Page MCP SDK. Provides `PageMcpHost`, `PageMcpClient`, `EventBus`, and cross-context transports for MCP-compatible communication.
+`@page-mcp/core` is the runtime package for Page MCP. It provides the host/client primitives that let a web page expose MCP-compatible tools, resources, and prompts, and lets local callers discover and invoke them.
 
-> 🌐 **Live Preview:** [https://page-mcp.org](https://page-mcp.org)
+Use this package when you want to:
 
-## Features
+- register page capabilities from the browser
+- expose MCP tools/resources/prompts through a local host
+- connect a client to that host and invoke capabilities
+- build higher-level adapters on top of the Page MCP runtime
 
-- 🔧 **PageMcpHost** — Register tools, resources, and prompts on the page side
-- 🤖 **PageMcpClient** — Discover and invoke page capabilities from the AI side
-- 🔌 **ITransport** — Pluggable transport interface for flexible communication
-- 🚌 **EventBus** — In-memory transport for same-context usage
-- 📨 **PostMessageTransport** — Cross-context transport via `window.postMessage` (Content Script ↔ Page)
-- 🧩 **ChromeRuntimeTransport** — Chrome Extension transport via `chrome.runtime` messaging
-- ✅ **MCP method surface** — `initialize`, `tools/*`, `resources/*`, `prompts/*`
-- 🧪 **Strict protocol mode** — reject legacy RPC methods during migration hardening
-- 📦 **Zero dependencies** — No third-party runtime dependencies
+If you only need shared protocol types and constants, use [`@page-mcp/protocol`](../protocol/README.md) instead.
 
 ## Installation
 
 ```bash
-npm install @page-mcp/core
-npm install @page-mcp/webmcp-adapter # optional: navigator.modelContext polyfill
+pnpm add @page-mcp/core
 ```
+
+## What `core` Does
+
+`@page-mcp/core` is responsible for runtime behavior, not protocol ownership.
+
+- `PageMcpHost`
+  Registers tools, resources, and prompts, then serves MCP requests locally.
+- `PageMcpClient`
+  Connects to a host and calls MCP methods such as `tools/list`, `tools/call`, `resources/read`, and `prompts/get`.
+- transport + event plumbing
+  Moves MCP requests and responses between host and client.
+- resource URI resolution
+  Resolves declarative page resources such as `page://selector/...` and `page://xpath/...`.
+
+Protocol types now live in [`@page-mcp/protocol`](../protocol/README.md).
 
 ## Quick Start
 
-### Same-Context Usage (EventBus)
+### 1. Create a host
 
-```typescript
-import { PageMcpHost, PageMcpClient, EventBus } from '@page-mcp/core';
-import { installWebMcpPolyfill } from '@page-mcp/webmcp-adapter';
+```ts
+import { PageMcpHost } from '@page-mcp/core';
 
-// 1. Create shared communication bus
-const bus = new EventBus();
+const host = new PageMcpHost();
+```
 
-// 2. Page side: register tools (WebMCP-aligned)
-const host = new PageMcpHost({ name: 'my-app', version: '1.0', bus });
+### 2. Register a tool
 
+```ts
 host.registerTool({
-  name: 'searchProducts',
-  description: 'Search products by keyword',
-  inputSchema: {
-    type: 'object',
-    properties: {
-      keyword: { type: 'string', description: 'Search keyword' }
+  name: 'get_page_title',
+  title: 'Get Page Title',
+  description: 'Returns the current document title.',
+  annotations: { readOnlyHint: true },
+  execute: async () => ({
+    title: document.title,
+  }),
+});
+```
+
+### 3. Register a declarative resource
+
+```ts
+host.registerResource({
+  uri: 'page://selector/.product-name',
+  name: 'Visible Product Names',
+  description: 'Names of visible products on the current page.',
+  mimeType: 'application/json',
+});
+```
+
+### 4. Register a prompt
+
+Simple prompts can be declared as templates using `messages`:
+
+```ts
+host.registerPrompt({
+  name: 'recommend-products',
+  description: 'Start a product recommendation conversation.',
+  messages: [
+    {
+      role: 'user',
+      content: {
+        type: 'text',
+        text: 'Recommend three products from the current page.',
+      },
     },
-    required: ['keyword']
-  },
-  execute: async (input) => {
-    return await searchProducts(input.keyword as string);
-  }
-});
-
-host.start();
-
-// 3. Install WebMCP polyfill (optional — enables navigator.modelContext API)
-installWebMcpPolyfill(host);
-
-// 4. AI side: discover and invoke
-const client = new PageMcpClient({ bus });
-await client.connect(); // prefers initialize(), falls back only if initialize is not implemented
-
-const tools = await client.toolsList();
-const result = await client.toolsCall('searchProducts', { keyword: 'headphones' });
-```
-
-### Browser Extension (PostMessageTransport)
-
-```typescript
-// === Page Script (inject or existing page code) ===
-import { PageMcpHost, PostMessageTransport } from '@page-mcp/core';
-
-const transport = new PostMessageTransport({ role: 'host', channel: 'page-mcp' });
-const host = new PageMcpHost({ name: 'my-app', version: '1.0', transport });
-
-host.registerTool({ /* ... */ });
-host.start();
-
-// === Content Script ===
-import { PageMcpClient, PostMessageTransport } from '@page-mcp/core';
-
-const transport = new PostMessageTransport({ role: 'client', channel: 'page-mcp' });
-const client = new PageMcpClient({ transport });
-await client.connect();
-
-const tools = await client.toolsList();
-```
-
-### Chrome Extension Background ↔ Content Script (ChromeRuntimeTransport)
-
-```typescript
-// === Content Script ===
-import { ChromeRuntimeTransport } from '@page-mcp/core';
-
-const transport = new ChromeRuntimeTransport({ channel: 'page-mcp' });
-// Use as Host or Client depending on architecture
-
-// === Background Script ===
-import { PageMcpClient, ChromeRuntimeTransport } from '@page-mcp/core';
-
-const transport = new ChromeRuntimeTransport({ tabId: activeTabId, channel: 'page-mcp' });
-const client = new PageMcpClient({ transport });
-await client.connect();
-```
-
-## API
-
-### `ITransport` (Interface)
-
-The pluggable transport interface that all transports implement:
-
-```typescript
-interface ITransport {
-  request(method: RpcMethod, params?: Record<string, unknown>): Promise<RpcResponse>;
-  onRequest(handler: (request: RpcRequest) => Promise<RpcResponse>): void;
-  on(event: string, callback: (data: unknown) => void): void;
-  off(event: string, callback: (data: unknown) => void): void;
-  emit(event: string, data?: unknown): void;
-  destroy(): void;
-}
-```
-
-### `EventBus` (implements `ITransport`)
-
-In-memory transport for same-context Host ↔ Client communication.
-
-```typescript
-const bus = new EventBus({ timeout: 10000 }); // RPC timeout, default 10s
-bus.on('rpc:request', (req) => { /* log */ });
-bus.on('rpc:response', (res) => { /* log */ });
-bus.destroy();
-```
-
-### `PostMessageTransport` (implements `ITransport`)
-
-Cross-context transport via `window.postMessage`. Used for Content Script ↔ Page communication.
-
-```typescript
-const transport = new PostMessageTransport({
-  channel: 'page-mcp',        // Channel identifier (both sides must match)
-  targetOrigin: '*',           // postMessage target origin
-  timeout: 10000,              // RPC timeout
-  role: 'host',                // 'host' | 'client' | undefined
+  ],
 });
 ```
 
-### `ChromeRuntimeTransport` (implements `ITransport`)
+Prompts with arguments can use `{{argName}}` placeholders:
 
-Chrome Extension messaging transport via `chrome.runtime`. Supports one-shot and long-lived Port connections.
-
-```typescript
-const transport = new ChromeRuntimeTransport({
-  channel: 'page-mcp',        // Channel identifier
-  timeout: 10000,              // RPC timeout
-  usePort: false,              // true = long-lived Port, false = one-shot sendMessage
-  portName: 'page-mcp-port',   // Port name (when usePort: true)
-  tabId: 123,                  // Tab ID for Background → Content Script
+```ts
+host.registerPrompt({
+  name: 'gift-ideas',
+  description: 'Suggest gift ideas for a given budget.',
+  arguments: [
+    { name: 'budget', required: true, description: 'Maximum budget in USD' },
+  ],
+  messages: [
+    {
+      role: 'user',
+      content: {
+        type: 'text',
+        text: 'Suggest gift ideas under ${{budget}} from the current page.',
+      },
+    },
+  ],
 });
 ```
 
-### `PageMcpHost`
+If a prompt needs dynamic logic, `handler` is still available:
 
-```typescript
-const host = new PageMcpHost({ name: 'app', version: '1.0', transport, strictProtocol: false });
-
-host.registerTool(toolDef);       // Register tool (WebMCP aligned)
-host.registerResource(resDef);    // Register resource
-host.registerSkill(skillDef);     // Register extension skill
-host.start();                     // Start listening for RPC requests
-host.getTransport();              // Get transport instance
-host.getBus();                    // Get EventBus (deprecated, throws if not EventBus)
-host.destroy();                   // Cleanup
-```
-
-### `PageMcpClient`
-
-```typescript
-const client = new PageMcpClient({ transport, connectTimeout: 5000 });
-await client.connect();
-
-await client.initialize();
-await client.toolsList();
-await client.toolsCall(name, args);
-await client.resourcesList();
-await client.resourcesRead(uri);
-await client.promptsList();
-await client.promptsGet(name, args);
-
-client.getTransport();             // Get transport instance
-client.disconnect();
-```
-
-### `Extensions` Skills API
-
-```typescript
-import { Extensions } from '@page-mcp/core';
-
-host.registerSkill({
-  name: 'cart-checkout',
-  version: '1.0.0',
-  description: 'Checkout flow',
-  skillMd: '# cart-checkout\nRun checkout flow.',
-  run: async (ctx, input) => {
-    await ctx.callTool('addToCart', input);
-    return ctx.callTool('placeOrder', {});
-  },
+```ts
+host.registerPrompt({
+  name: 'page-summary',
+  description: 'Summarize the current page state.',
+  handler: async () => ({
+    messages: [
+      {
+        role: 'user',
+        content: {
+          type: 'text',
+          text: `Summarize the current page titled "${document.title}".`,
+        },
+      },
+    ],
+  }),
 });
-
-const client = new PageMcpClient({ transport });
-await client.connect();
-
-const skills = Extensions.createSkillsClient(client);
-await skills.list();
-await skills.get('cart-checkout');
-await skills.execute('cart-checkout', { productId: 'p1' });
 ```
 
-`scriptJs` support:
+### 5. Connect a client
 
-- You can register `scriptJs` text on skills.
-- Inline script execution is disabled by default.
-- Enable explicitly via `new PageMcpHost({ skills: { allowInlineScriptExecution: true } })`.
+```ts
+import { PageMcpClient } from '@page-mcp/core';
 
-### WebMCP Polyfill
+const client = new PageMcpClient({ host });
 
-```typescript
-import { installWebMcpPolyfill, isWebMcpSupported } from '@page-mcp/webmcp-adapter';
-
-isWebMcpSupported(); // Check native support
-installWebMcpPolyfill(host); // Install polyfill
-installWebMcpPolyfill(host, { force: true }); // Force override
-
-// Standard API:
-navigator.modelContext.registerTool({ name: 'myTool', ... });
+const tools = await client.listTools();
+const title = await client.callTool('get_page_title', {});
 ```
 
-## Transport Architecture
+## Common Patterns
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│                    Browser Extension                        │
-│  ┌──────────────┐   chrome.runtime   ┌──────────────────┐   │
-│  │  Popup / UI  │ ◄───────────────► │  Background SW   │   │
-│  └──────────────┘                    └───────┬──────────┘   │
-│                              ChromeRuntimeTransport         │
-│  ┌───────────────────────────────────────────┼──────────┐   │
-│  │              Content Script               │          │   │
-│  │                                     Bridge/Relay     │   │
-│  │             PostMessageTransport                     │   │
-│  └──────────────┬───────────────────────────────────────┘   │
-│                 │  (JS isolation boundary)                   │
-│  ┌──────────────┼───────────────────────────────────────┐   │
-│  │    Web Page   │                                      │   │
-│  │   ┌──────────▼───┐                                   │   │
-│  │   │ PageMcpHost  │  (PostMessageTransport)           │   │
-│  │   └──────────────┘                                   │   │
-│  └──────────────────────────────────────────────────────┘   │
-└─────────────────────────────────────────────────────────────┘
+### Tools
 
-Same-context (in-page):
-┌─────────────────────────────────────────┐
-│               Web Page                  │
-│  ┌────────────┐     ┌──────────────┐    │
-│  │ PageMcpHost│◄───►│PageMcpClient │    │
-│  └─────┬──────┘     └──────┬───────┘    │
-│        └──────┬───────────┘             │
-│         ┌─────▼─────┐                   │
-│         │  EventBus │                   │
-│         └───────────┘                   │
-└─────────────────────────────────────────┘
-```
+Use tools for actions, side effects, and custom logic.
 
-For detailed documentation, see the [main README](../../README.md).
+Typical examples:
 
-## License
+- submit a form
+- add an item to cart
+- run a page-specific workflow
+- return computed or business-level JSON
 
-MIT
+### Resources
+
+Use resources for declarative page reads.
+
+`@page-mcp/core` supports these URI forms:
+
+- `page://selector/<encoded-css-selector>`
+- `page://xpath/<encoded-xpath>`
+
+`mimeType` controls how the result is read:
+
+- `text/plain`
+  Reads the first matched node's `textContent`
+- `text/html`
+  Reads the first matched node's `outerHTML`
+- `application/json`
+  Returns a JSON payload shaped as `{ "content": ... }`
+
+For `application/json`, the content is a lightweight text-oriented snapshot:
+
+- single node without child elements -> `{"content":["node.textContent"]}`
+- single node with child elements -> `{"content":["child0.textContent", ...]}`
+- multiple nodes without child elements -> `{"content":["node1.textContent", "node2.textContent"]}`
+- multiple nodes with child elements -> `{"content":[["node1.child0.textContent"], ["node2.child0.textContent"]]}`
+
+### Prompts
+
+Use prompts for user-controlled shortcuts.
+
+- no-argument prompts work well as one-click shortcuts
+- parameterized prompts should be invoked only after the caller supplies arguments
+- simple prompts should prefer `messages` templates
+- `handler` should be reserved for prompts that truly need dynamic logic
+
+## Transport and Runtime Model
+
+`PageMcpHost` keeps registered capabilities in memory and responds to MCP requests such as:
+
+- `tools/list`
+- `tools/call`
+- `resources/list`
+- `resources/read`
+- `prompts/list`
+- `prompts/get`
+
+`PageMcpClient` talks to the host through the local runtime transport used by the SDK.
+
+## Relationship to Other Packages
+
+- [`@page-mcp/protocol`](../protocol/README.md)
+  Pure protocol types and constants. Use this when you need shared MCP/WebMCP/PageMCP definitions.
+- [`@page-mcp/webmcp-adapter`](../webmcp-adapter/README.md)
+  Browser-side adapter and interoperability helpers.
+- framework packages such as `@page-mcp/react`, `@page-mcp/vue3`, and `@page-mcp/vue2`
+  Integration layers built on top of `core`.
+
+## Structure Evolution
+
+The package previously mixed protocol definitions and runtime implementation in the same place. That made field ownership unclear and made future extension harder.
+
+The structure is now split into:
+
+- `Anthropic MCP`
+  Standard MCP object shapes and method constants
+- `WebMCP`
+  Browser-facing execution extensions
+- `Page MCP`
+  Page-specific registration/runtime definitions
+
+Those pure protocol types now live in `@page-mcp/protocol`. `@page-mcp/core` remains the runtime implementation package.

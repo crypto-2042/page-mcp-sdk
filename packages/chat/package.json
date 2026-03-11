@@ -30,15 +30,20 @@
     "scripts": {
         "build": "tsup",
         "dev": "tsup --watch",
-        "typecheck": "tsc --noEmit"
+        "typecheck": "tsc --noEmit",
+        "test": "pnpm exec vitest run",
+        "test:watch": "pnpm exec vitest"
     },
     "dependencies": {
         "@page-mcp/core": "workspace:^",
+        "@page-mcp/protocol": "workspace:^",
         "dompurify": "^3.2.5",
         "marked": "^15.0.7"
     },
     "devDependencies": {
+        "jsdom": "^26.1.0",
         "tsup": "^8.0.0",
-        "typescript": "^5.4.0"
+        "typescript": "^5.4.0",
+        "vitest": "^2.1.9"
     }
 }

@@ -18,17 +18,15 @@ describe('Prompts contract', () => {
           description: 'Name of the customer',
         },
       ],
-      handler: async (args) => ({
-        messages: [
-          {
-            role: 'assistant',
-            content: {
-              type: 'text',
-              text: `Hello ${String(args.customer_name)}. Ready to complete checkout?`,
-            },
+      messages: [
+        {
+          role: 'assistant',
+          content: {
+            type: 'text',
+            text: 'Hello {{customer_name}}. Ready to complete checkout?',
           },
-        ],
-      }),
+        },
+      ],
     });
 
     host.start();

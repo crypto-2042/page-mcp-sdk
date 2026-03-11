@@ -1,0 +1,39 @@
+{
+  "name": "@page-mcp/protocol",
+  "version": "3.0.0",
+  "description": "Protocol types and constants for Page MCP",
+  "license": "MIT",
+  "keywords": [
+    "mcp",
+    "page-mcp",
+    "protocol",
+    "webmcp"
+  ],
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "typecheck": "tsc --noEmit",
+    "test": "pnpm exec vitest run",
+    "test:watch": "pnpm exec vitest"
+  },
+  "devDependencies": {
+    "tsup": "^8.0.0",
+    "typescript": "^5.4.0",
+    "vitest": "^2.1.9"
+  }
+}

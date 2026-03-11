@@ -35,6 +35,9 @@
         "vue": ">=3.2.0",
         "@page-mcp/core": "^2.0.0"
     },
+    "dependencies": {
+        "@page-mcp/protocol": "workspace:^"
+    },
     "devDependencies": {
         "vue": "^3.4.0",
         "@page-mcp/core": "workspace:^",

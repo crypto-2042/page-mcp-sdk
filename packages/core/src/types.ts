@@ -3,85 +3,7 @@
 // Aligned with WebMCP W3C Standard (webmachinelearning.github.io/webmcp)
 // ============================================================
 
-// ------ JSON Schema (simplified) ------
-
-export interface JsonSchema {
-    type: 'object' | 'string' | 'number' | 'boolean' | 'array';
-    properties?: Record<string, JsonSchema & { default?: unknown; description?: string; pattern?: string }>;
-    required?: string[];
-    items?: JsonSchema;
-    description?: string;
-}
-
-// ------ Tool Annotations (WebMCP §4.2.2) ------
-
-export interface ToolAnnotations {
-    /** If true, the tool does not modify state and only reads data */
-    readOnlyHint?: boolean;
-}
-
-// ------ Tool (WebMCP-aligned: ModelContextTool) ------
-
-/**
- * Tool definition — aligned with WebMCP's `ModelContextTool` dictionary.
- *
- * WebMCP spec fields:
- * - `name` (required) — unique tool identifier
- * - `description` (required) — natural language description
- * - `inputSchema` (optional) — JSON Schema for input parameters
- * - `execute` (required) — callback invoked by the agent
- * - `annotations` (optional) — metadata hints (e.g. readOnlyHint)
- */
-export interface ToolDefinition {
-    name: string;
-    title?: string;
-    description: string;
-    inputSchema?: JsonSchema;
-    outputSchema?: JsonSchema;
-    securitySchemes?: Array<Record<string, unknown>>;
-    execute: (input: Record<string, unknown>) => Promise<unknown>;
-    annotations?: ToolAnnotations;
-}
-
-/** Tool info exposed to the client (no execute callback) */
-export interface ToolInfo {
-    name: string;
-    title?: string;
-    description: string;
-    inputSchema?: JsonSchema;
-    outputSchema?: JsonSchema;
-    securitySchemes?: Array<Record<string, unknown>>;
-    annotations?: ToolAnnotations;
-}
-
-// ------ Resource (Page MCP extension, beyond WebMCP) ------
-
-export interface ResourceDefinition {
-    uri: string;
-    name: string;
-    description: string;
-    mimeType?: string;
-    handler: () => Promise<ResourceReadResult | unknown>;
-}
-
-/** Resource info exposed to the client (no handler) */
-export interface ResourceInfo {
-    uri: string;
-    name: string;
-    description: string;
-    mimeType?: string;
-}
-
-export interface ResourceContent {
-    uri: string;
-    mimeType: string;
-    text?: string;
-    blob?: string;
-}
-
-export interface ResourceReadResult {
-    contents: ResourceContent[];
-}
+import type { JsonSchema } from '@page-mcp/protocol';
 
 // ------ Skills Extension (non-standard MCP extension) ------
 
@@ -130,42 +52,6 @@ export interface SkillExecutionResult {
     success: boolean;
     output?: unknown;
     error?: string;
-}
-
-// ------ Prompt (Page MCP extension: predefined AI conversation starters) ------
-
-export interface PromptDefinition {
-    /** Unique identifier */
-    name: string;
-    description: string;
-    arguments?: PromptArgument[];
-    handler: (args: Record<string, unknown>) => Promise<PromptGetResult>;
-}
-
-export interface PromptInfo {
-    name: string;
-    description: string;
-    arguments?: PromptArgument[];
-}
-
-export interface PromptArgument {
-    name: string;
-    description?: string;
-    required?: boolean;
-}
-
-export interface PromptMessageContent {
-    type: 'text';
-    text: string;
-}
-
-export interface PromptMessage {
-    role: 'assistant' | 'user' | 'system';
-    content: PromptMessageContent;
-}
-
-export interface PromptGetResult {
-    messages: PromptMessage[];
 }
 
 // ------ Transport Interface ------
