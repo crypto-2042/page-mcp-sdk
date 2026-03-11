@@ -1,10 +1,17 @@
 {
     "name": "page-mcp-sdk",
     "private": true,
+    "pnpm": {
+        "onlyBuiltDependencies": [
+            "esbuild"
+        ]
+    },
     "scripts": {
         "test": "pnpm -r run test",
-        "build": "pnpm -r run build",
+        "build": "pnpm --filter @page-mcp/protocol run build && pnpm --filter @page-mcp/core run build && pnpm --filter @page-mcp/webmcp-adapter run build && pnpm --filter @page-mcp/chat run build && pnpm --filter @page-mcp/react run build && pnpm --filter @page-mcp/vue3 run build && pnpm --filter @page-mcp/vue2 run build && pnpm run build:demo",
+        "build:protocol": "pnpm --filter @page-mcp/protocol run build",
         "build:core": "pnpm --filter @page-mcp/core run build",
+        "build:webmcp-adapter": "pnpm --filter @page-mcp/webmcp-adapter run build",
         "build:chat": "pnpm --filter @page-mcp/chat run build",
         "build:react": "pnpm --filter @page-mcp/react run build",
         "build:vue3": "pnpm --filter @page-mcp/vue3 run build",

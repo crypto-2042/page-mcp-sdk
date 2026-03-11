@@ -1,6 +1,6 @@
 {
     "name": "@page-mcp/chat",
-    "version": "2.0.0",
+    "version": "3.1.0",
     "description": "Embeddable AI Chat Widget with OpenAI-compatible API + Page MCP integration",
     "license": "MIT",
     "keywords": [
@@ -30,15 +30,20 @@
     "scripts": {
         "build": "tsup",
         "dev": "tsup --watch",
-        "typecheck": "tsc --noEmit"
+        "typecheck": "tsc --noEmit",
+        "test": "pnpm exec vitest run",
+        "test:watch": "pnpm exec vitest"
     },
     "dependencies": {
-        "@page-mcp/core": "workspace:^",
+        "@page-mcp/core": "^3.1.0",
+        "@page-mcp/protocol": "^3.1.0",
         "dompurify": "^3.2.5",
         "marked": "^15.0.7"
     },
     "devDependencies": {
+        "jsdom": "^26.1.0",
         "tsup": "^8.0.0",
-        "typescript": "^5.4.0"
+        "typescript": "^5.4.0",
+        "vitest": "^2.1.9"
     }
 }

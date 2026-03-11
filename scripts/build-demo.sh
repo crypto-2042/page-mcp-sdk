@@ -1,13 +1,14 @@
 #!/bin/bash
 # Build script for Vercel deployment
-# Builds all packages, then assembles a public/ directory preserving
-# the relative path structure so demo/index.html can reference
-# ../packages/*/dist/* unchanged.
+# Assembles a public/ directory from already-built package artifacts
+# while preserving the relative path structure expected by demo/index.html.
 
 set -e
 
-echo "🔨 Building all packages..."
-pnpm run build
+if [ ! -f packages/core/dist/index.global.js ] || [ ! -f packages/chat/dist/index.global.js ]; then
+  echo "❌ Missing built assets. Run the root build first so demo dependencies are compiled."
+  exit 1
+fi
 
 echo "📦 Assembling public directory..."
 rm -rf public

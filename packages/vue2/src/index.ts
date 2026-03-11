@@ -7,12 +7,18 @@ import {
     PageMcpHost,
     PageMcpClient,
     EventBus,
-    type ToolDefinition,
-    type ResourceDefinition,
     type SkillDefinition,
     type PromptDefinition,
     type HostInfo,
 } from '@page-mcp/core';
+import type {
+    PageMcpToolDefinition,
+    PageMcpResourceDefinition,
+    PageMcpPromptDefinition,
+    AnthropicMcpTool,
+    AnthropicMcpResource,
+    AnthropicMcpPrompt,
+} from '@page-mcp/protocol';
 
 // ------ Types for Vue 2 ------
 
@@ -26,10 +32,10 @@ interface Vue2ComponentOptions {
 interface Vue2Instance {
     $pageMcp?: PageMcpInjection;
     $options: {
-        pageMcpTools?: ToolDefinition[];
-        pageMcpResources?: ResourceDefinition[];
+        pageMcpTools?: PageMcpToolDefinition[];
+        pageMcpResources?: PageMcpResourceDefinition[];
         pageMcpSkills?: SkillDefinition[];
-        pageMcpPrompts?: PromptDefinition[];
+        pageMcpPrompts?: PageMcpPromptDefinition[];
         parent?: Vue2Instance;
         [key: string]: unknown;
     };
@@ -223,16 +229,18 @@ export {
 } from '@page-mcp/core';
 
 export type {
-    ToolDefinition,
-    ToolInfo,
-    ResourceDefinition,
-    ResourceInfo,
     SkillDefinition,
     SkillInfo,
     SkillGetResult,
     SkillExecutionResult,
     SkillExecutionContext,
-    PromptDefinition,
-    PromptInfo,
     HostInfo,
 } from '@page-mcp/core';
+export type {
+    PageMcpToolDefinition,
+    PageMcpResourceDefinition,
+    PageMcpPromptDefinition,
+    AnthropicMcpTool,
+    AnthropicMcpResource,
+    AnthropicMcpPrompt,
+} from '@page-mcp/protocol';

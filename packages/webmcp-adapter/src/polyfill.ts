@@ -1,4 +1,8 @@
-import type { JsonSchema, ToolAnnotations, ToolDefinition } from '@page-mcp/core';
+import type {
+  JsonSchema,
+  AnthropicMcpToolAnnotations,
+  PageMcpToolDefinition,
+} from '@page-mcp/protocol';
 
 export interface WebMcpTool {
   name: string;
@@ -6,9 +10,8 @@ export interface WebMcpTool {
   description: string;
   inputSchema?: Record<string, unknown>;
   outputSchema?: Record<string, unknown>;
-  securitySchemes?: Array<Record<string, unknown>>;
   execute: (input: Record<string, unknown>, client?: unknown) => Promise<unknown>;
-  annotations?: ToolAnnotations;
+  annotations?: AnthropicMcpToolAnnotations;
 }
 
 export interface ModelContext {
@@ -28,7 +31,7 @@ export function isWebMcpSupported(): boolean {
 
 export function installWebMcpPolyfill(
   host: {
-    registerTool: (def: ToolDefinition) => unknown;
+    registerTool: (def: PageMcpToolDefinition) => unknown;
     unregisterTool?: (name: string) => unknown;
   },
   options?: {
@@ -92,7 +95,6 @@ export function installWebMcpPolyfill(
           description: tool.description,
           inputSchema: tool.inputSchema as JsonSchema | undefined,
           outputSchema: tool.outputSchema as JsonSchema | undefined,
-          securitySchemes: tool.securitySchemes,
           annotations: tool.annotations,
           execute: async (input) => tool.execute(input, modelContextClient),
         });
@@ -124,27 +126,25 @@ export function installWebMcpPolyfill(
   });
 }
 
-export function toWebMcpTool(def: ToolDefinition): WebMcpTool {
+export function toWebMcpTool(def: PageMcpToolDefinition): WebMcpTool {
   return {
     name: def.name,
     title: def.title,
     description: def.description,
     inputSchema: def.inputSchema as Record<string, unknown> | undefined,
     outputSchema: def.outputSchema as Record<string, unknown> | undefined,
-    securitySchemes: def.securitySchemes,
     execute: async (input) => def.execute(input),
     annotations: def.annotations,
   };
 }
 
-export function fromWebMcpTool(tool: WebMcpTool): ToolDefinition {
+export function fromWebMcpTool(tool: WebMcpTool): PageMcpToolDefinition {
   return {
     name: tool.name,
     title: tool.title,
     description: tool.description,
     inputSchema: tool.inputSchema as JsonSchema | undefined,
     outputSchema: tool.outputSchema as JsonSchema | undefined,
-    securitySchemes: tool.securitySchemes,
     execute: async (input) => tool.execute(input),
     annotations: tool.annotations,
   };

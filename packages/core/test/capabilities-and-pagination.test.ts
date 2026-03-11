@@ -65,19 +65,16 @@ describe('Capabilities, pagination and list-changed notifications', () => {
       uri: 'page://resource_1',
       name: 'Resource 1',
       description: 'Resource 1',
-      handler: async () => ({ contents: [] }),
     });
     host.registerResource({
       uri: 'page://resource_2',
       name: 'Resource 2',
       description: 'Resource 2',
-      handler: async () => ({ contents: [] }),
     });
     host.registerResource({
       uri: 'page://resource_3',
       name: 'Resource 3',
       description: 'Resource 3',
-      handler: async () => ({ contents: [] }),
     });
 
     const resourcesPage = await bus.request('resources/list', { cursor: '1', limit: 2 });
@@ -136,7 +133,6 @@ describe('Capabilities, pagination and list-changed notifications', () => {
       uri: 'page://notify',
       name: 'Notify Resource',
       description: 'Notify resource',
-      handler: async () => ({ contents: [] }),
     });
 
     host.registerPrompt({

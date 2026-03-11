@@ -20,12 +20,18 @@ import {
     PageMcpHost,
     PageMcpClient,
     EventBus,
-    type ToolDefinition,
-    type ResourceDefinition,
     type SkillDefinition,
     type PromptDefinition,
     type HostInfo,
 } from '@page-mcp/core';
+import type {
+    PageMcpToolDefinition,
+    PageMcpResourceDefinition,
+    PageMcpPromptDefinition,
+    AnthropicMcpTool,
+    AnthropicMcpResource,
+    AnthropicMcpPrompt,
+} from '@page-mcp/protocol';
 
 // ------ Injection Keys ------
 
@@ -159,7 +165,7 @@ export function usePageMcpBus(): EventBus {
  * });
  * ```
  */
-export function useRegisterTool(definition: ToolDefinition): void {
+export function useRegisterTool(definition: PageMcpToolDefinition): void {
     const host = usePageMcpHost();
     onMounted(() => {
         try {
@@ -180,7 +186,7 @@ export function useRegisterTool(definition: ToolDefinition): void {
 /**
  * Register a Resource on the Host.
  */
-export function useRegisterResource(definition: ResourceDefinition): void {
+export function useRegisterResource(definition: PageMcpResourceDefinition): void {
     const host = usePageMcpHost();
     onMounted(() => {
         try {
@@ -237,7 +243,7 @@ export function usePageMcpSkills(): InstanceType<typeof Extensions.SkillsClient>
  * });
  * ```
  */
-export function useRegisterPrompt(definition: PromptDefinition): void {
+export function useRegisterPrompt(definition: PageMcpPromptDefinition): void {
     const host = usePageMcpHost();
     onMounted(() => {
         try {
@@ -265,16 +271,18 @@ export {
 } from '@page-mcp/core';
 
 export type {
-    ToolDefinition,
-    ToolInfo,
-    ResourceDefinition,
-    ResourceInfo,
     SkillDefinition,
     SkillInfo,
     SkillGetResult,
     SkillExecutionResult,
     SkillExecutionContext,
-    PromptDefinition,
-    PromptInfo,
     HostInfo,
 } from '@page-mcp/core';
+export type {
+    PageMcpToolDefinition,
+    PageMcpResourceDefinition,
+    PageMcpPromptDefinition,
+    AnthropicMcpTool,
+    AnthropicMcpResource,
+    AnthropicMcpPrompt,
+} from '@page-mcp/protocol';

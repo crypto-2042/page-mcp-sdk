@@ -4,22 +4,26 @@
 
 import { EventBus } from './transport.js';
 import type {
-    ToolDefinition,
-    ToolInfo,
-    ResourceDefinition,
-    ResourceInfo,
     SkillDefinition,
     SkillInfo,
     SkillGetResult,
     SkillExecutionContext,
     SkillExecutionResult,
-    PromptDefinition,
-    PromptInfo,
     HostInfo,
     RpcRequest,
     RpcResponse,
     ITransport,
 } from './types.js';
+import type {
+    AnthropicMcpPrompt,
+    AnthropicMcpResource,
+    AnthropicMcpResourceContent,
+    AnthropicMcpResourceReadResult,
+    AnthropicMcpTool,
+    PageMcpPromptDefinition,
+    PageMcpResourceDefinition,
+    PageMcpToolDefinition,
+} from '@page-mcp/protocol';
 
 export interface PageMcpHostOptions {
     name: string;
@@ -44,10 +48,10 @@ export interface PageMcpHostOptions {
 export class PageMcpHost {
     private readonly info: HostInfo;
     private readonly transport: ITransport;
-    private readonly tools = new Map<string, ToolDefinition>();
-    private readonly resources = new Map<string, ResourceDefinition>();
+    private readonly tools = new Map<string, PageMcpToolDefinition>();
+    private readonly resources = new Map<string, PageMcpResourceDefinition>();
     private readonly skills = new Map<string, SkillDefinition>();
-    private readonly prompts = new Map<string, PromptDefinition>();
+    private readonly prompts = new Map<string, PageMcpPromptDefinition>();
     private readonly strictProtocol: boolean;
     private readonly allowInlineScriptExecution: boolean;
     private readonly requestUserInteraction?: (request: unknown) => Promise<unknown>;
@@ -97,7 +101,7 @@ export class PageMcpHost {
 
     // ---- Registration ----
 
-    registerTool(def: ToolDefinition): this {
+    registerTool(def: PageMcpToolDefinition): this {
         if (this.tools.has(def.name)) {
             throw new Error(`Tool "${def.name}" is already registered`);
         }
@@ -115,7 +119,7 @@ export class PageMcpHost {
         return this;
     }
 
-    registerResource(def: ResourceDefinition): this {
+    registerResource(def: PageMcpResourceDefinition): this {
         if (this.resources.has(def.uri)) {
             throw new Error(`Resource "${def.uri}" is already registered`);
         }
@@ -152,9 +156,12 @@ export class PageMcpHost {
         return this;
     }
 
-    registerPrompt(def: PromptDefinition): this {
+    registerPrompt(def: PageMcpPromptDefinition): this {
         if (this.prompts.has(def.name)) {
             throw new Error(`Prompt "${def.name}" is already registered`);
+        }
+        if (!def.messages && !def.handler) {
+            throw new Error(`Prompt "${def.name}" must define either messages or handler`);
         }
         this.prompts.set(def.name, def);
         this.transport.emit('notifications/prompts/list_changed', {});
@@ -325,14 +332,13 @@ export class PageMcpHost {
 
     // ---- Internal helpers ----
 
-    private getToolInfoList(): ToolInfo[] {
+    private getToolInfoList(): AnthropicMcpTool[] {
         return Array.from(this.tools.values()).map(({
             name,
             title,
             description,
             inputSchema,
             outputSchema,
-            securitySchemes,
             annotations,
         }) => ({
             name,
@@ -340,12 +346,11 @@ export class PageMcpHost {
             description,
             inputSchema,
             outputSchema,
-            securitySchemes,
             annotations,
         }));
     }
 
-    private getResourceInfoList(): ResourceInfo[] {
+    private getResourceInfoList(): AnthropicMcpResource[] {
         return Array.from(this.resources.values()).map(({ uri, name, description, mimeType }) => ({
             uri,
             name,
@@ -354,7 +359,7 @@ export class PageMcpHost {
         }));
     }
 
-    private getPromptInfoList(): PromptInfo[] {
+    private getPromptInfoList(): AnthropicMcpPrompt[] {
         return Array.from(this.prompts.values()).map(({ name, description, arguments: promptArguments }) => ({
             name,
             description,
@@ -413,25 +418,7 @@ export class PageMcpHost {
         if (!resource) {
             throw new Error(`Resource not found: ${uri}`);
         }
-        const result = await resource.handler();
-        if (
-            typeof result === 'object' &&
-            result !== null &&
-            'contents' in result &&
-            Array.isArray((result as { contents?: unknown }).contents)
-        ) {
-            return result;
-        }
-
-        return {
-            contents: [
-                {
-                    uri: resource.uri,
-                    mimeType: resource.mimeType ?? 'application/json',
-                    text: JSON.stringify(result),
-                },
-            ],
-        };
+        return this.resolveResource(resource);
     }
 
     private async executePromptByName(name: string, args: Record<string, unknown>): Promise<unknown> {
@@ -439,7 +426,136 @@ export class PageMcpHost {
         if (!prompt) {
             throw new Error(`Prompt not found: ${name}`);
         }
-        return prompt.handler(args);
+        if (prompt.messages) {
+            return {
+                messages: prompt.messages.map((message) => ({
+                    ...message,
+                    content: {
+                        ...message.content,
+                        text: this.renderPromptTemplate(message.content.text, args),
+                    },
+                })),
+            };
+        }
+        if (prompt.handler) {
+            return prompt.handler(args);
+        }
+        throw new Error(`Prompt "${name}" has no executable template or handler`);
+    }
+
+    private renderPromptTemplate(template: string, args: Record<string, unknown>): string {
+        return template.replace(/\{\{\s*([a-zA-Z0-9_]+)\s*\}\}/g, (_match, key: string) => {
+            const value = args[key];
+            return value == null ? '' : String(value);
+        });
+    }
+
+    private resolveResource(resource: PageMcpResourceDefinition): AnthropicMcpResourceReadResult {
+        const mimeType = resource.mimeType ?? 'application/json';
+        const nodes = this.queryResourceNodes(resource.uri);
+
+        return {
+            contents: [
+                {
+                    uri: resource.uri,
+                    mimeType,
+                    text: this.serializeResourceContent(resource.uri, mimeType, nodes),
+                },
+            ],
+        };
+    }
+
+    private queryResourceNodes(uri: string): Array<{ textContent?: string | null; outerHTML?: string; children?: ArrayLike<unknown> }> {
+        const documentRef = globalThis.document as
+            | {
+                querySelectorAll?: (selector: string) => ArrayLike<{ textContent?: string | null; outerHTML?: string; children?: ArrayLike<unknown> }>;
+                evaluate?: (
+                    xpath: string,
+                    contextNode: unknown,
+                    namespaceResolver: unknown,
+                    resultType: number,
+                    result: unknown,
+                ) => { snapshotLength: number; snapshotItem(index: number): { textContent?: string | null; outerHTML?: string; children?: ArrayLike<unknown> } | null };
+              }
+            | undefined;
+        if (!documentRef) {
+            throw new Error('document is not available for resource resolution');
+        }
+
+        const parsed = this.parseResourceUri(uri);
+        if (parsed.engine === 'selector') {
+            if (typeof documentRef.querySelectorAll !== 'function') {
+                throw new Error('document.querySelectorAll is not available for selector resources');
+            }
+            return Array.from(documentRef.querySelectorAll(parsed.expression));
+        }
+
+        if (typeof documentRef.evaluate !== 'function' || typeof globalThis.XPathResult === 'undefined') {
+            throw new Error('XPath evaluation is not available for xpath resources');
+        }
+        const snapshot = documentRef.evaluate(
+            parsed.expression,
+            documentRef,
+            null,
+            globalThis.XPathResult.ORDERED_NODE_SNAPSHOT_TYPE,
+            null,
+        );
+        const nodes: Array<{ textContent?: string | null; outerHTML?: string; children?: ArrayLike<unknown> }> = [];
+        for (let index = 0; index < snapshot.snapshotLength; index += 1) {
+            const node = snapshot.snapshotItem(index);
+            if (node) {
+                nodes.push(node);
+            }
+        }
+        return nodes;
+    }
+
+    private parseResourceUri(uri: string): { engine: 'selector' | 'xpath'; expression: string } {
+        if (uri.startsWith('page://selector/')) {
+            return {
+                engine: 'selector',
+                expression: decodeURIComponent(uri.slice('page://selector/'.length)),
+            };
+        }
+        if (uri.startsWith('page://xpath/')) {
+            return {
+                engine: 'xpath',
+                expression: decodeURIComponent(uri.slice('page://xpath/'.length)),
+            };
+        }
+        throw new Error(`Unsupported resource uri: ${uri}`);
+    }
+
+    private serializeResourceContent(
+        uri: string,
+        mimeType: AnthropicMcpResourceContent['mimeType'],
+        nodes: Array<{ textContent?: string | null; outerHTML?: string; children?: ArrayLike<unknown> }>,
+    ): string {
+        void uri;
+        if (mimeType === 'text/html') {
+            return nodes[0]?.outerHTML ?? '';
+        }
+        if (mimeType === 'text/plain') {
+            return nodes[0]?.textContent ?? '';
+        }
+        return JSON.stringify({ content: this.serializeResourceJsonContent(nodes) });
+    }
+
+    private serializeResourceJsonContent(
+        nodes: Array<{ textContent?: string | null; children?: ArrayLike<unknown> }>,
+    ): string[] | string[][] {
+        const nodeContents = nodes.map((node) => {
+            const children = Array.from(node.children ?? []) as Array<{ textContent?: string | null }>;
+            if (children.length === 0) {
+                return (node.textContent ?? '').trim();
+            }
+            return children.map((child) => (child.textContent ?? '').trim());
+        });
+
+        if (nodeContents.every((item) => typeof item === 'string')) {
+            return nodeContents as string[];
+        }
+        return nodeContents.map((item) => (Array.isArray(item) ? item : [item]));
     }
 
     private async executeSkillByName(name: string, args: Record<string, unknown>): Promise<SkillExecutionResult> {

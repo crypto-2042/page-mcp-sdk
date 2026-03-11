@@ -1,105 +1,98 @@
 # @page-mcp/chat
 
-Embeddable AI Chat Widget with OpenAI-compatible API integration and automatic Page MCP tool discovery.
+Embeddable chat UI package for Page MCP. Use it when you want a ready-to-drop chat widget that can automatically discover page capabilities exposed through `@page-mcp/core`.
 
-> 🌐 **Live Preview:** [https://page-mcp.org](https://page-mcp.org)
+## What This Package Does
 
-## Features
+- renders a browser chat widget
+- connects to OpenAI-compatible chat APIs
+- auto-discovers tools and prompts from a shared Page MCP bus/client
+- supports direct API mode and endpoint mode
 
-- 🎨 Beautiful dark/light/auto theme with glassmorphism design
-- 📱 Responsive — works on desktop and mobile
-- 🔧 Auto-discovers MCP tools registered via `@page-mcp/core`
-- 🤖 OpenAI function-calling for tool execution
-- 💬 Chat UI with Markdown support (tables, code blocks, lists, headings)
-- ⚡ Prompt shortcut cards for quick interactions
-- 🗑️ Clear chat button to reset conversation
-- ⚙️ Fully configurable via JavaScript API
-- 📦 Zero dependencies — pure vanilla JS Web Component
+## When To Use It
+
+Use `@page-mcp/chat` when:
+
+- you want a working chat UI instead of building one from scratch
+- you already expose tools/resources/prompts through `@page-mcp/core`
+- you want the widget to automatically surface those capabilities to the model
+
+If you only need runtime MCP wiring, use `@page-mcp/core` directly.
 
 ## Installation
 
 ```bash
-npm install @page-mcp/core @page-mcp/chat
+npm install @page-mcp/core
+npm install @page-mcp/chat
 ```
 
-## Quick Start
+## Minimal Example
 
-### Script Tag (IIFE)
-
-```html
-<script src="@page-mcp/core/dist/index.global.js"></script>
-<script src="@page-mcp/chat/dist/index.global.js"></script>
-<script>
-  const bus = new PageMcpCore.EventBus();
-  const host = new PageMcpCore.PageMcpHost({ name: 'my-app', version: '1.0', bus });
-  host.registerTool({ /* ... */ });
-  host.start();
-
-  PageMcpChat.init({
-    bus,
-    openai: { apiKey: 'sk-xxx', model: 'gpt-5.2' },
-    theme: 'dark',
-    position: 'bottom-right',
-  });
-</script>
-```
-
-### ES Module
-
-```typescript
+```ts
 import { EventBus, PageMcpHost } from '@page-mcp/core';
 import { init } from '@page-mcp/chat';
 
 const bus = new EventBus();
-const host = new PageMcpHost({ name: 'my-app', version: '1.0', bus });
+
+const host = new PageMcpHost({
+  name: 'demo-app',
+  version: '1.0.0',
+  bus,
+});
+
+host.registerTool({
+  name: 'search_products',
+  description: 'Search products by keyword',
+  execute: async (input) => [{ keyword: String(input.keyword ?? '') }],
+});
+
 host.start();
 
 const widget = init({
   bus,
-  openai: { apiKey: 'sk-xxx', model: 'gpt-5.2' },
-  theme: 'dark',
-  position: 'bottom-right',
+  openai: {
+    apiKey: 'sk-xxx',
+    model: 'gpt-5.2',
+  },
   title: 'AI Assistant',
-  welcomeMessage: 'Hi! How can I help you?',
+  welcomeMessage: 'How can I help?',
 });
-
-// Programmatic control
-widget.open();
-widget.close();
-widget.destroy();
 ```
 
-## Configuration
+## Two Operating Modes
 
-| Option | Type | Default | Description |
-|---|---|---|---|
-| `bus` | `EventBus` | auto-detected | MCP EventBus instance |
-| `openai.apiKey` | `string` | — | OpenAI API key |
-| `openai.baseURL` | `string` | `https://api.openai.com/v1` | API endpoint (supports any OpenAI-compatible API) |
-| `openai.model` | `string` | `gpt-5.2` | Model name |
-| `theme` | `string` | `dark` | `dark`, `light`, or `auto` |
-| `position` | `string` | `bottom-right` | `bottom-right` or `bottom-left` |
-| `title` | `string` | `AI Assistant` | Chat panel title |
-| `accentColor` | `string` | `#6C5CE7` | Brand accent color |
-| `welcomeMessage` | `string` | — | Initial welcome message |
-| `prompts` | `PromptInfo[]` | auto-discovered | Prompt shortcut cards |
+### Direct API Mode
 
-## MCP Integration
+The widget sends requests directly to an OpenAI-compatible API from the browser.
 
-When used alongside `@page-mcp/core`, the widget automatically discovers registered tools and makes them available to the AI via OpenAI function calling. No additional configuration needed — just share the same `EventBus` instance.
+Use when:
 
-## Markdown Support
+- browser-side API access is acceptable
+- you want the smallest setup
 
-The chat widget renders rich Markdown content from AI responses:
+### Endpoint Mode
 
-- **Tables** — Full `<table>` rendering with styled headers and alternating rows
-- **Code blocks** — Fenced code blocks with syntax-aware styling
-- **Inline code** — Backtick-wrapped inline code
-- **Bold / Italic** — Standard markdown emphasis
-- **Links** — Clickable links that open in new tabs
-- **Headings** — H2, H3, H4 support
-- **Lists** — Unordered lists
+The widget sends chat requests to your own backend endpoint.
 
-## License
+Use when:
 
-MIT
+- you do not want API keys in the browser
+- you need backend request shaping, auth, or observability
+
+## Core Surface
+
+- `init(config)`
+  - create and mount the widget
+- widget instance methods
+  - `open()`
+  - `close()`
+  - `destroy()`
+
+## Relationship To Other Packages
+
+- `@page-mcp/core`
+  - provides the host/client/bus used for capability discovery
+- `@page-mcp/protocol`
+  - provides the protocol types used by the chat engine internally
+
+Use this package for the UI layer, not for low-level MCP runtime setup.

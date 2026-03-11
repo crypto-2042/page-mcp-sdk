@@ -1,6 +1,6 @@
 {
     "name": "@page-mcp/react",
-    "version": "2.0.0",
+    "version": "3.1.0",
     "description": "React adapter for Page MCP SDK — Provider + Hooks",
     "license": "MIT",
     "keywords": [
@@ -32,12 +32,15 @@
     },
     "peerDependencies": {
         "react": ">=17.0.0",
-        "@page-mcp/core": "^2.0.0"
+        "@page-mcp/core": "^3.1.0"
+    },
+    "dependencies": {
+        "@page-mcp/protocol": "^3.1.0"
     },
     "devDependencies": {
         "react": "^18.0.0",
         "@types/react": "^18.0.0",
-        "@page-mcp/core": "workspace:^",
+        "@page-mcp/core": "^3.1.0",
         "tsup": "^8.0.0",
         "typescript": "^5.4.0"
     }

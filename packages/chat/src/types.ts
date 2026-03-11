@@ -16,6 +16,8 @@ export interface OpenAIConfig {
     apiKey: string;
     baseURL?: string;
     model?: string;
+    /** Stream direct-mode responses via SSE (default: true) */
+    stream?: boolean;
     /** Dangerously allow browser-side API calls (required for direct mode) */
     dangerouslyAllowBrowser?: boolean;
 }
@@ -39,6 +41,8 @@ export interface ChatConfig {
     // --- MCP ---
     /** Existing EventBus to connect to page MCP tools (auto-detected if not provided) */
     bus?: import('@page-mcp/core').EventBus;
+    /** Resource URIs that should be preselected for explicit attachment */
+    defaultAttachedResources?: string[];
 
     // --- UI ---
     /** FAB position (default: 'bottom-right') */
@@ -89,6 +93,8 @@ export interface ChatMessage {
     role: MessageRole;
     content: string;
     timestamp: number;
+    /** Internal context message that should not render as a chat bubble */
+    hidden?: boolean;
     /** Tool calls made by the assistant */
     toolCalls?: ToolCallInfo[];
     /** For tool role messages, the tool_call_id */
@@ -102,6 +108,7 @@ export interface ChatEngineEvents {
     'message:stream': (messageId: string, chunk: string) => void;
     'toolcall:start': (messageId: string, toolCall: ToolCallInfo) => void;
     'toolcall:end': (messageId: string, toolCall: ToolCallInfo) => void;
+    'aborted': () => void;
     'error': (error: Error) => void;
     'loading': (loading: boolean) => void;
 }

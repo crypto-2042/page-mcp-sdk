@@ -1,644 +1,136 @@
-<p align="center">
-  <h1 align="center">Page MCP SDK</h1>
-</p>
+# Page MCP SDK
 
-<p align="center">
-  <strong>MCP 对齐的网页能力 SDK — 通过标准化的 tools/resources/prompts 与 skills 扩展让网页自我解释给 AI</strong>
-</p>
+Page MCP 让网页能够以结构化方式向 AI 描述自己的能力。
 
-<p align="center">
-  <a href="https://page-mcp.org">🌐 在线预览</a> ·
-  <a href="#包一览">包一览</a> ·
-  <a href="#快速开始">快速开始</a> ·
-  <a href="#核心概念">核心概念</a> ·
-  <a href="#框架适配">框架适配</a> ·
-  <a href="#api-参考">API</a> ·
-  <a href="./README.md">English</a>
-</p>
+它不再让 Agent 只靠原始 DOM 去猜测页面语义，而是由页面明确暴露：
 
-<p align="center">
-  <img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License" />
-  <img src="https://img.shields.io/badge/node-%3E%3D18-brightgreen.svg" alt="Node" />
-  <img src="https://img.shields.io/badge/pnpm-%3E%3D8-orange.svg" alt="pnpm" />
-  <img src="https://img.shields.io/badge/WebMCP-compatible-blueviolet.svg" alt="WebMCP" />
-</p>
+- 能做什么
+- 能读什么
+- 有哪些 prompt 快捷入口或工作流
 
----
+这会比只依赖 selector 的自动化更稳定、更清晰，也更容易维护。
 
-## 目录
+## Page MCP 是什么
 
-- [概述](#概述)
-- [与 WebMCP 的关系](#与-webmcp-的关系)
-- [包一览](#包一览)
-- [快速开始](#快速开始)
-  - [安装](#安装)
-  - [最简示例（纯 JS）](#最简示例纯-js)
-  - [Script Tag（CDN / IIFE）](#script-tagcdn--iife)
-- [核心概念](#核心概念)
-  - [Tools（工具）— WebMCP 对齐](#tools工具-webmcp-对齐)
-  - [Resources（资源）— 超越 WebMCP](#resources资源-超越-webmcp)
-  - [Skills（技能/工作流）— 超越 WebMCP](#skills技能工作流-超越-webmcp)
-  - [WebMCP Adapter](#webmcp-adapter)
-  - [Chat Widget（聊天组件）](#chat-widget聊天组件)
-- [框架适配](#框架适配)
-  - [React](#react-page-mcpreact)
-  - [Vue 3](#vue-3-page-mcpvue3)
-  - [Vue 2](#vue-2-page-mcpvue2)
-- [API 参考](#api-参考)
-- [Demo](#demo)
-- [开发指南](#开发指南)
-- [许可证](#许可证)
+Page MCP 是一套让网页对 AI 更可理解、更可操作的协议与运行时方案。
 
----
+它的核心思路很简单：
 
-## 概述
+- 页面主动暴露结构化能力
+- AI 侧发现这些能力
+- AI 通过稳定接口调用，而不是只靠 DOM 猜测
 
-AI Agent 越来越需要理解和操作网页。传统的 DOM 抓取既脆弱又低效。**Page MCP SDK** 让页面主动「自我解释」，通过结构化的 MCP 协议将能力暴露给 AI：
+这个仓库提供了在浏览器里构建这套能力所需的包。
 
-- 🔧 **Tools（工具）** — 可调用的操作（如「加入购物车」、「搜索商品」）— *与 WebMCP 标准对齐*
-- 📖 **Resources（资源）** — 可读取的数据（如「购物车内容」、「商品目录」）— *超越 WebMCP*
-- 🚀 **Skills（技能）** — 编排多个工具的工作流（如「智能下单」）— *超越 WebMCP*
-- 💬 **Chat Widget（聊天组件）** — 可嵌入的 AI 助手，自动发现已注册的 MCP 工具
+## 它解决什么问题
 
-> 🌐 **在线预览：** [https://page-mcp.org](https://page-mcp.org) — 体验 TechMart 电商 Demo 及 AI 助手
+大多数网页 AI 集成都有同一个问题：
 
+- AI 能看到 HTML，但看不到页面真正的业务语义
+- DOM 抓取很脆弱，和页面结构强耦合
+- 像“搜索”“加入购物车”“读取结算摘要”这类关键操作，往往都藏在实现细节里
+
+Page MCP 的作用，就是让页面明确告诉 AI：
+
+- “我支持这些动作”
+- “你可以读取这些资源”
+- “这里有这些 prompt 或工作流”
+
+这样 AI 就不需要再从 selector 里反向推测整个页面能力。
+
+## 它如何工作
+
+1. 页面注册 tools、resources、prompts 或 skills。
+2. Client 侧发现这些能力。
+3. AI 通过结构化接口调用正确的能力。
+
+```text
+Web Page
+  -> 通过 PageMcpHost 暴露能力
+AI Client / Widget / Extension
+  -> 通过 PageMcpClient 发现并调用
 ```
-┌──────────────────────────────────────────┐
-│               Web Page                   │
-│                                          │
-│  ┌────────────┐     ┌──────────────┐     │
-│  │   页面应用  │     │    AI 组件    │     │
-│  └─────┬──────┘     └──────┬───────┘     │
-│        │                   │             │
-│  ┌─────▼──────┐     ┌─────▼───────┐      │
-│  │ PageMcpHost│◄───►│PageMcpClient│      │
-│  └─────┬──────┘     └─────┬───────┘      │
-│        └──────┬───────────┘              │
-│         ┌─────▼─────┐                    │
-│         │  EventBus │                    │
-│         └───────────┘                    │
-└──────────────────────────────────────────┘
-```
-
-## 与 WebMCP 的关系
-
-[WebMCP](https://github.com/niccolli/niccolli.github.io) 是 Google 和 Microsoft 联合提出的 W3C 标准，通过 `navigator.modelContext.registerTool()` 让页面暴露工具给 AI Agent。
-
-**本 SDK 是 MCP 对齐运行时 + WebMCP 浏览器适配器：**
-
-| 能力 | WebMCP 标准 | 本 SDK |
-|---|---|---|
-| `registerTool()` | ✅ 浏览器原生（可用范围有限） | ✅ 通过 `@page-mcp/webmcp-adapter` polyfill |
-| `inputSchema` / `execute` | ✅ 标准字段 | ✅ 完全对齐 |
-| `annotations.readOnlyHint` | ✅ 标准字段 | ✅ 完全对齐 |
-| **Resources（数据暴露）** | ❌ 不支持 | ✅ `registerResource()` |
-| **Skills（工作流编排）** | ❌ 不支持 | ✅ `registerSkill()` |
-| **Chat Widget（AI 聊天）** | ❌ 不支持 | ✅ `@page-mcp/chat` |
-| **框架适配** | ❌ 仅原生 JS | ✅ React / Vue 3 / Vue 2 |
-| **自动检测原生支持** | — | ✅ 有则用原生，无则由 adapter 补齐 |
-
-## 包一览
-
-| 包名 | 描述 | 大小 |
-|---|---|---|
-| [`@page-mcp/core`](./packages/core) | 核心 SDK — Host、Client、EventBus、Transport、MCP + Skills 扩展 API | ~13 KB |
-| [`@page-mcp/webmcp-adapter`](./packages/webmcp-adapter) | 浏览器 WebMCP 适配器（polyfill + PageMcpHost 桥接） | ~3 KB |
-| [`@page-mcp/chat`](./packages/chat) | 可嵌入的 AI 聊天组件，支持 OpenAI 兼容 API + MCP | ~38 KB |
-| [`@page-mcp/react`](./packages/react) | React 适配器 — Provider + Hooks | ~3 KB |
-| [`@page-mcp/vue3`](./packages/vue3) | Vue 3 适配器 — Plugin + Composables | ~3 KB |
-| [`@page-mcp/vue2`](./packages/vue2) | Vue 2 适配器 — Plugin + Mixin | ~2 KB |
 
 ## 快速开始
 
 ### 安装
 
 ```bash
-# 核心 SDK（必需）
 npm install @page-mcp/core
-
-# WebMCP 适配器（可选）
-npm install @page-mcp/webmcp-adapter
-
-# AI 聊天组件（可选）
-npm install @page-mcp/chat
-
-# 选择一个框架适配器（可选）
-npm install @page-mcp/react    # React
-npm install @page-mcp/vue3     # Vue 3
-npm install @page-mcp/vue2     # Vue 2
 ```
 
-### 最简示例（纯 JS）
+### 最小示例
 
-```typescript
-import { PageMcpHost, PageMcpClient, EventBus } from '@page-mcp/core';
-import { installWebMcpPolyfill } from '@page-mcp/webmcp-adapter';
+```ts
+import { EventBus, PageMcpClient, PageMcpHost } from '@page-mcp/core';
 
-// 1. 创建共享通信总线
 const bus = new EventBus();
 
-// 2. 页面侧：注册工具（WebMCP 标准字段）
-const host = new PageMcpHost({ name: 'my-app', version: '1.0', bus });
+const host = new PageMcpHost({
+  name: 'demo-app',
+  version: '1.0.0',
+  bus,
+});
 
 host.registerTool({
-  name: 'searchProducts',
-  description: '搜索商品',
+  name: 'search_products',
+  description: 'Search products by keyword',
   inputSchema: {
     type: 'object',
     properties: {
-      keyword: { type: 'string', description: '搜索关键词' }
+      keyword: { type: 'string' },
     },
-    required: ['keyword']
+    required: ['keyword'],
   },
   execute: async (input) => {
-    return await searchProducts(input.keyword as string);
-  }
+    return [{ keyword: String(input.keyword ?? '') }];
+  },
 });
 
 host.start();
 
-// 3. 安装 WebMCP polyfill（可选）
-installWebMcpPolyfill(host);
-
-// 4. AI 侧：发现并调用
 const client = new PageMcpClient({ bus });
 await client.connect();
 
 const tools = await client.toolsList();
-console.log('可用工具:', tools);
-
-const result = await client.toolsCall('searchProducts', { keyword: '耳机' });
-console.log('搜索结果:', result);
+const result = await client.toolsCall('search_products', { keyword: 'phone' });
 ```
 
-### Script Tag（CDN / IIFE）
+如果你需要更完整的运行时接入说明，先看 [`@page-mcp/core`](./packages/core)。
 
-```html
-<script src="@page-mcp/core/dist/index.global.js"></script>
-<script src="@page-mcp/chat/dist/index.global.js"></script>
-<script>
-  const bus = new PageMcpCore.EventBus();
-  const host = new PageMcpCore.PageMcpHost({ name: 'my-app', version: '1.0', bus });
+## 什么时候适合使用 Page MCP
 
-  host.registerTool({ /* ... */ });
-  host.start();
+以下场景很适合使用 Page MCP：
 
-  // 启动 AI 聊天组件 — 自动发现已注册的工具
-  PageMcpChat.init({
-    bus,
-    openai: { apiKey: 'sk-xxx', model: 'gpt-5.2' },
-    theme: 'dark',
-    position: 'bottom-right',
-  });
-</script>
-```
+- 页面本身已经有明确的业务动作
+- 希望 AI 通过显式页面能力工作，而不是依赖脆弱抓取
+- 希望网页 UI 和 AI 之间有一个稳定接口
+- 你在做内部系统、电商流程、表单系统、后台面板或内容工作流
 
-## 核心概念
+尤其是当“看见 DOM”依然不足以让 Agent 真正理解页面时，Page MCP 的价值会很明显。
 
-### Tools（工具）— WebMCP 对齐
+## 包一览
 
-工具是 AI 可以调用的**单次操作**。API 与 WebMCP 的 `ModelContextTool` 完全对齐：
-
-```typescript
-// 只读工具（带标注）
-host.registerTool({
-  name: 'getProductInfo',
-  description: '根据名称获取商品详情',
-  inputSchema: {
-    type: 'object',
-    properties: { productName: { type: 'string' } },
-    required: ['productName']
-  },
-  annotations: { readOnlyHint: true },
-  execute: async (input) => products.find(p => p.name === input.productName),
-});
-
-// 写入工具
-host.registerTool({
-  name: 'addToCart',
-  description: '将商品加入购物车',
-  inputSchema: {
-    type: 'object',
-    properties: {
-      productName: { type: 'string', description: '商品名称' },
-      quantity: { type: 'number', description: '数量，默认为 1' }
-    },
-    required: ['productName']
-  },
-  execute: async (input) => {
-    return cartService.add(input.productName as string, (input.quantity as number) ?? 1);
-  }
-});
-```
-
-### Resources（资源）— 超越 WebMCP
-
-资源是 AI 可以**读取的数据**。通过 URI 标识，适用于暴露页面状态、配置信息等。
-
-> 💡 这是 Page MCP SDK 在 WebMCP 之上的增强能力。WebMCP 当前仅支持 Tools。
-
-```typescript
-host.registerResource({
-  uri: 'page://cart/items',
-  name: '购物车内容',
-  description: '当前用户购物车中的所有商品',
-  handler: async () => ({
-    items: cartService.getItems(),
-    total: cartService.getTotal()
-  })
-});
-
-// AI 侧读取
-const cart = await client.resourcesRead('page://cart/items');
-// => { items: [...], total: 299.97 }
-```
-
-### Skills（技能/工作流）— 超越 WebMCP
-
-Skills 通过 `extensions/skills/*` RPC 扩展暴露。一个 skill 至少包含 `name`、`version`、`skillMd`，并提供运行逻辑（`run` 或可选 `scriptJs`）。
-
-```typescript
-import { Extensions } from '@page-mcp/core';
-
-host.registerSkill({
-  name: 'cart-checkout',
-  version: '1.0.0',
-  description: '当前购物车结算流程',
-  skillMd: '# cart-checkout\n执行结算并提交订单。',
-  run: async (ctx, input) => {
-    await ctx.callTool('addToCart', input);
-    return ctx.callTool('placeOrder', {});
-  }
-});
-
-const skills = Extensions.createSkillsClient(client);
-await skills.list();
-await skills.get('cart-checkout');
-await skills.execute('cart-checkout', { productId: 'p1', quantity: 1 });
-```
-
-`scriptJs` 说明：
-- 支持在注册时传入 `scriptJs` 文本。
-- 默认禁用内联 JS 执行。
-- 需要显式开启：`new PageMcpHost({ skills: { allowInlineScriptExecution: true } })`。
-
-### WebMCP Adapter
-
-```typescript
-import { installWebMcpPolyfill, isWebMcpSupported } from '@page-mcp/webmcp-adapter';
-
-// 检测浏览器是否原生支持 WebMCP
-isWebMcpSupported(); // => boolean
-
-// 安装 polyfill（原生支持则跳过，除非 force: true）
-installWebMcpPolyfill(host);
-installWebMcpPolyfill(host, { force: true }); // 强制覆盖
-
-// 现在标准 WebMCP API 可用了
-navigator.modelContext.registerTool({
-  name: 'myTool',
-  description: '一个工具',
-  execute: async (input) => ({ result: 'ok' }),
-});
-```
-
-### Chat Widget（聊天组件）
-
-`@page-mcp/chat` 提供可嵌入的 AI 助手，自动发现和使用已注册的 MCP 工具。
-
-```typescript
-import { init } from '@page-mcp/chat';
-
-const widget = init({
-  bus,                                             // MCP EventBus
-  openai: {
-    apiKey: 'sk-xxx',
-    baseURL: 'https://api.openai.com/v1',          // 支持任何 OpenAI 兼容的端点
-    model: 'gpt-5.2',
-  },
-  theme: 'dark',                                   // 'dark' | 'light' | 'auto'
-  position: 'bottom-right',                        // 悬浮按钮位置
-  title: 'AI 助手',
-  accentColor: '#6366f1',
-  welcomeMessage: '你好！有什么可以帮助你的？',
-});
-
-// 程控操作
-widget.open();
-widget.close();
-widget.destroy();
-```
-
-## 框架适配
-
-<details>
-<summary><h3>React (<code>@page-mcp/react</code>)</h3></summary>
-
-提供 Provider 组件 + Hooks，符合 React 最佳实践。
-
-```tsx
-import { PageMcpProvider, useRegisterTool, useRegisterResource } from '@page-mcp/react';
-
-// 包裹应用
-function App() {
-  return (
-    <PageMcpProvider name="my-app" version="1.0">
-      <ProductPage />
-    </PageMcpProvider>
-  );
-}
-
-// 在组件中注册工具
-function ProductPage() {
-  useRegisterTool({
-    name: 'searchProducts',
-    description: '搜索商品列表',
-    inputSchema: { type: 'object', properties: { keyword: { type: 'string' } }, required: ['keyword'] },
-    execute: async (input) => products.filter(p => p.name.includes(input.keyword as string)),
-  });
-
-  useRegisterResource({
-    uri: 'page://products',
-    name: '商品列表',
-    description: '当前页面展示的所有商品',
-    handler: async () => ({ products })
-  });
-
-  return <div>{/* 页面 UI */}</div>;
-}
-```
-
-| Hook | 描述 |
+| 包名 | 主要职责 |
 |---|---|
-| `usePageMcpHost()` | 获取 Host 实例 |
-| `usePageMcpClient()` | 获取 Client 实例 |
-| `usePageMcpBus()` | 获取 EventBus 实例 |
-| `useRegisterTool(def)` | 注册工具（组件卸载时自动清理） |
-| `useRegisterResource(def)` | 注册资源 |
-| `useRegisterSkill(def)` | 注册技能 |
+| [`@page-mcp/core`](./packages/core) | 运行时实现：host、client、transports、能力执行 |
+| [`@page-mcp/protocol`](./packages/protocol) | 共享协议类型与常量 |
+| [`@page-mcp/webmcp-adapter`](./packages/webmcp-adapter) | 浏览器侧 WebMCP polyfill 与 bridge |
+| [`@page-mcp/chat`](./packages/chat) | 可嵌入聊天 UI，可自动发现页面能力 |
+| [`@page-mcp/react`](./packages/react) | React 集成层 |
+| [`@page-mcp/vue3`](./packages/vue3) | Vue 3 集成层 |
+| [`@page-mcp/vue2`](./packages/vue2) | Vue 2 集成层 |
 
-</details>
+## 进一步了解
 
-<details>
-<summary><h3>Vue 3 (<code>@page-mcp/vue3</code>)</h3></summary>
+- 运行时使用方式：[`packages/core/README.md`](./packages/core/README.md)
+- 协议类型：[`packages/protocol/README.md`](./packages/protocol/README.md)
+- 浏览器适配层：[`packages/webmcp-adapter/README.md`](./packages/webmcp-adapter/README.md)
+- 聊天组件：[`packages/chat/README.md`](./packages/chat/README.md)
+- React 适配器：[`packages/react/README.md`](./packages/react/README.md)
+- Vue 3 适配器：[`packages/vue3/README.md`](./packages/vue3/README.md)
+- Vue 2 适配器：[`packages/vue2/README.md`](./packages/vue2/README.md)
 
-提供 Plugin + Composables。
+## License
 
-```typescript
-// main.ts
-import { createApp } from 'vue';
-import { PageMcpPlugin } from '@page-mcp/vue3';
-
-const app = createApp(App);
-app.use(PageMcpPlugin, { name: 'my-app', version: '1.0' });
-app.mount('#app');
-```
-
-```vue
-<script setup lang="ts">
-import { useRegisterTool, usePageMcpClient } from '@page-mcp/vue3';
-
-useRegisterTool({
-  name: 'getFormData',
-  description: '获取当前表单数据',
-  inputSchema: { type: 'object', properties: {} },
-  execute: async () => ({ name: formData.name, email: formData.email })
-});
-
-const client = usePageMcpClient();
-</script>
-```
-
-| Composable | 描述 |
-|---|---|
-| `usePageMcpHost()` | 获取 Host 实例 |
-| `usePageMcpClient()` | 获取 Client 实例 |
-| `usePageMcpBus()` | 获取 EventBus 实例 |
-| `useRegisterTool(def)` | 注册工具 |
-| `useRegisterResource(def)` | 注册资源 |
-| `useRegisterSkill(def)` | 注册技能 |
-
-</details>
-
-<details>
-<summary><h3>Vue 2 (<code>@page-mcp/vue2</code>)</h3></summary>
-
-提供 Plugin + Mixin，通过 `this.$pageMcp` 访问。
-
-```javascript
-// main.js
-import Vue from 'vue';
-import { PageMcpPlugin } from '@page-mcp/vue2';
-Vue.use(PageMcpPlugin, { name: 'my-app', version: '1.0' });
-```
-
-```javascript
-// 组件
-export default {
-  pageMcpTools: [
-    {
-      name: 'getTableData',
-      description: '获取表格当前数据',
-      inputSchema: { type: 'object', properties: {} },
-      execute: async function() { return this.tableData; }
-    }
-  ],
-  pageMcpResources: [
-    {
-      uri: 'page://table/data',
-      name: '表格数据',
-      description: '当前表格展示的数据',
-      handler: async () => ({ rows: store.state.tableData })
-    }
-  ]
-};
-```
-
-| API | 描述 |
-|---|---|
-| `this.$pageMcp.host` | PageMcpHost 实例 |
-| `this.$pageMcp.client` | PageMcpClient 实例 |
-| `this.$pageMcp.bus` | EventBus 实例 |
-| `pageMcpTools` 选项 | 组件创建时自动注册的工具数组 |
-| `pageMcpResources` 选项 | 组件创建时自动注册的资源数组 |
-| `pageMcpSkills` 选项 | 组件创建时自动注册的技能数组 |
-
-</details>
-
-## API 参考
-
-### `EventBus`
-
-通信总线，负责 Host 和 Client 之间的消息传递。
-
-```typescript
-const bus = new EventBus({ timeout: 10000 }); // RPC 超时时间，默认 10s
-
-bus.on('rpc:request', (req) => { /* 日志 */ });
-bus.on('rpc:response', (res) => { /* 日志 */ });
-bus.destroy();
-```
-
-### `PageMcpHost`
-
-页面侧的宿主，注册 Tools / Resources / Skills 并处理 AI 请求。
-
-```typescript
-const bus = new EventBus();
-const host = new PageMcpHost({ name: 'app', version: '1.0', bus });
-
-host.registerTool(toolDef);       // 注册工具（WebMCP 对齐）
-host.registerResource(resDef);    // 注册资源
-host.registerPrompt(promptDef);   // 注册 Prompt
-host.registerSkill(skillDef);     // 注册技能扩展
-
-host.start();                     // 开始监听 RPC 请求
-host.getTransport();              // 获取 Transport 实例
-host.destroy();                   // 停止监听并清理
-```
-
-### `PageMcpClient`
-
-AI 侧的客户端，发现和调用页面能力。
-
-```typescript
-import { Extensions } from '@page-mcp/core';
-
-const bus = new EventBus();
-const client = new PageMcpClient({ bus, connectTimeout: 5000 });
-
-await client.connect();
-await client.initialize();
-client.isConnected();
-client.getHostInfo();
-
-// Tools
-await client.toolsList();
-await client.toolsCall(name, args);
-
-// Resources
-await client.resourcesList();
-await client.resourcesRead(uri);
-
-// Prompts
-await client.promptsList();
-await client.promptsGet(name, args);
-
-// Skills 扩展
-const skills = Extensions.createSkillsClient(client);
-await skills.list();
-await skills.execute(name, args);
-
-client.disconnect();
-```
-
-### RPC 协议
-
-| 方法 | 描述 | 参数 |
-|---|---|---|
-| `initialize` | MCP 握手（协议版本/能力/serverInfo） | `{ protocolVersion, capabilities, clientInfo }` |
-| `tools/list` | 获取工具列表（RPC 方法） | `{ cursor?, limit? }` |
-| `tools/call` | 调用工具（RPC 方法） | `{ name, arguments }` |
-| `resources/list` | 获取资源列表（RPC 方法） | `{ cursor?, limit? }` |
-| `resources/read` | 读取资源（RPC 方法） | `{ uri }` |
-| `prompts/list` | 获取提示词模板列表（RPC 方法） | `{ cursor?, limit? }` |
-| `prompts/get` | 解析提示词模板（RPC 方法） | `{ name, arguments }` |
-| `extensions/skills/list` | 获取技能列表（扩展） | `{ cursor?, limit? }` |
-| `extensions/skills/get` | 获取技能详情（`skillMd`、元数据） | `{ name }` |
-| `extensions/skills/execute` | 通过 `run` 或 `scriptJs` 执行技能 | `{ name, arguments }` |
-
-兼容迁移期间，非 strict 模式仍接受 `ping`、`getHostInfo`、`listTools`、`callTool`、`listResources`、`readResource`、`listPrompts` 等旧方法。
-
-## Demo
-
-> 🌐 **在线预览：** [https://page-mcp.org](https://page-mcp.org)
-
-项目包含一个完整的电商 Demo（TechMart），展示 SDK 的全部能力：
-
-```bash
-# 1. 安装依赖并构建
-pnpm install
-pnpm build
-
-# 2. 启动本地服务器
-npx serve .
-
-# 3. 访问 http://localhost:3000/demo
-```
-
-Demo 特色：
-- 🛍️ **电商店面** — 商品展示、购物车、订单历史
-- 🔧 **MCP 调试控制台** — 查看已注册的工具/资源/技能和 RPC 通信记录
-- ⚙️ **AI 设置面板** — 配置 API Key、Base URL、模型、主题
-- 💬 **AI 聊天助手** — 嵌入式助手，通过 MCP 与商店交互
-
-## 开发指南
-
-### 环境要求
-
-- Node.js >= 18
-- pnpm >= 8
-
-### 构建
-
-```bash
-pnpm install
-pnpm build          # 构建所有包
-pnpm build:core     # 仅构建核心包
-pnpm build:chat     # 仅构建聊天组件
-pnpm typecheck      # 类型检查
-```
-
-### 项目结构
-
-```
-page-mcp-sdk/
-├── packages/
-│   ├── core/               # @page-mcp/core
-│   │   └── src/
-│   │       ├── types.ts        # 共享类型（WebMCP 对齐）
-│   │       ├── mcp-types.ts    # MCP 原生方法/类型
-│   │       ├── transport.ts    # EventBus 通信层
-│   │       ├── host.ts         # PageMcpHost
-│   │       ├── client.ts       # PageMcpClient
-│   │       ├── extensions/     # Skills 扩展客户端/类型
-│   │       └── index.ts        # 统一导出
-│   ├── webmcp-adapter/     # @page-mcp/webmcp-adapter
-│   ├── chat/               # @page-mcp/chat
-│   │   └── src/
-│   │       ├── chat-engine.ts  # AI 聊天引擎（基于 fetch）
-│   │       ├── chat-widget.ts  # Web 组件 UI
-│   │       ├── styles.ts       # 主题样式
-│   │       ├── markdown.ts     # Markdown 渲染器
-│   │       └── types.ts        # 聊天类型定义
-│   ├── react/              # @page-mcp/react
-│   ├── vue3/               # @page-mcp/vue3
-│   └── vue2/               # @page-mcp/vue2
-├── demo/
-│   └── index.html          # TechMart 电商 Demo
-├── pnpm-workspace.yaml
-└── package.json
-```
-
-## 设计原则
-
-1. **WebMCP 对齐** — Tool API 与 W3C WebMCP 标准完全兼容
-2. **超越标准** — Resources + Skills 提供 WebMCP 之外的增值能力
-3. **原生优先 WebMCP** — 有浏览器原生 WebMCP 则用原生，无则由 adapter 补齐
-4. **框架无关核心** — 核心逻辑不绑定任何框架
-5. **零运行时依赖** — 核心 SDK 无第三方依赖
-6. **可替换 Transport** — 通信层可拔插替换
-
-## 参与贡献
-
-欢迎贡献！请随时提交 Pull Request。
-
-1. Fork 本仓库
-2. 创建功能分支（`git checkout -b feature/amazing-feature`）
-3. 提交更改（`git commit -m 'feat: add amazing feature'`）
-4. 推送到分支（`git push origin feature/amazing-feature`）
-5. 提交 Pull Request
-
-## 许可证
-
-[MIT](./LICENSE)
+MIT

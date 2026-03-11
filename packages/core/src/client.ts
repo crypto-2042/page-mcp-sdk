@@ -4,14 +4,18 @@
 
 import { EventBus } from './transport.js';
 import type {
-    ToolInfo,
-    ResourceInfo,
-    PromptInfo,
     HostInfo,
     ITransport,
     RpcMethod,
     RpcResponse,
 } from './types.js';
+import type {
+    AnthropicMcpPrompt,
+    AnthropicMcpPromptGetResult,
+    AnthropicMcpResource,
+    AnthropicMcpResourceReadResult,
+    AnthropicMcpTool,
+} from '@page-mcp/protocol';
 
 export interface PageMcpClientOptions {
     /** @deprecated Use `transport` instead. Kept for backward compatibility. */
@@ -132,14 +136,14 @@ export class PageMcpClient {
 
     // ---- MCP: Tools ----
 
-    async toolsList(params?: { cursor?: string; limit?: number }): Promise<{ items: ToolInfo[]; nextCursor?: string }> {
+    async toolsList(params?: { cursor?: string; limit?: number }): Promise<{ items: AnthropicMcpTool[]; nextCursor?: string }> {
         this.ensureConnected();
         const response = await this.transport.request('tools/list', {
             cursor: params?.cursor ?? '0',
             limit: params?.limit,
         });
         if (response.error) throw new Error(response.error.message);
-        const result = response.result as { items?: ToolInfo[]; nextCursor?: string } | ToolInfo[];
+        const result = response.result as { items?: AnthropicMcpTool[]; nextCursor?: string } | AnthropicMcpTool[];
         if (Array.isArray(result)) return { items: result };
         return { items: result.items ?? [], nextCursor: result.nextCursor };
     }
@@ -151,7 +155,7 @@ export class PageMcpClient {
         return response.result;
     }
 
-    async listTools(): Promise<ToolInfo[]> {
+    async listTools(): Promise<AnthropicMcpTool[]> {
         const result = await this.toolsList({ cursor: '0' });
         return result.items;
     }
@@ -162,61 +166,61 @@ export class PageMcpClient {
 
     // ---- MCP: Resources ----
 
-    async resourcesList(params?: { cursor?: string; limit?: number }): Promise<{ items: ResourceInfo[]; nextCursor?: string }> {
+    async resourcesList(params?: { cursor?: string; limit?: number }): Promise<{ items: AnthropicMcpResource[]; nextCursor?: string }> {
         this.ensureConnected();
         const response = await this.transport.request('resources/list', {
             cursor: params?.cursor ?? '0',
             limit: params?.limit,
         });
         if (response.error) throw new Error(response.error.message);
-        const result = response.result as { items?: ResourceInfo[]; nextCursor?: string } | ResourceInfo[];
+        const result = response.result as { items?: AnthropicMcpResource[]; nextCursor?: string } | AnthropicMcpResource[];
         if (Array.isArray(result)) return { items: result };
         return { items: result.items ?? [], nextCursor: result.nextCursor };
     }
 
-    async resourcesRead(uri: string): Promise<unknown> {
+    async resourcesRead(uri: string): Promise<AnthropicMcpResourceReadResult> {
         this.ensureConnected();
         const response = await this.transport.request('resources/read', { uri });
         if (response.error) throw new Error(response.error.message);
-        return response.result;
+        return response.result as AnthropicMcpResourceReadResult;
     }
 
-    async listResources(): Promise<ResourceInfo[]> {
+    async listResources(): Promise<AnthropicMcpResource[]> {
         const result = await this.resourcesList({ cursor: '0' });
         return result.items;
     }
 
-    async readResource(uri: string): Promise<unknown> {
+    async readResource(uri: string): Promise<AnthropicMcpResourceReadResult> {
         return this.resourcesRead(uri);
     }
 
     // ---- Prompts ----
 
-    async promptsList(params?: { cursor?: string; limit?: number }): Promise<{ items: PromptInfo[]; nextCursor?: string }> {
+    async promptsList(params?: { cursor?: string; limit?: number }): Promise<{ items: AnthropicMcpPrompt[]; nextCursor?: string }> {
         this.ensureConnected();
         const response = await this.transport.request('prompts/list', {
             cursor: params?.cursor ?? '0',
             limit: params?.limit,
         });
         if (response.error) throw new Error(response.error.message);
-        const result = response.result as { items?: PromptInfo[]; nextCursor?: string } | PromptInfo[];
+        const result = response.result as { items?: AnthropicMcpPrompt[]; nextCursor?: string } | AnthropicMcpPrompt[];
         if (Array.isArray(result)) return { items: result };
         return { items: result.items ?? [], nextCursor: result.nextCursor };
     }
 
-    async promptsGet(name: string, args?: Record<string, unknown>): Promise<unknown> {
+    async promptsGet(name: string, args?: Record<string, unknown>): Promise<AnthropicMcpPromptGetResult> {
         this.ensureConnected();
         const response = await this.transport.request('prompts/get', { name, arguments: args ?? {} });
         if (response.error) throw new Error(response.error.message);
-        return response.result;
+        return response.result as AnthropicMcpPromptGetResult;
     }
 
-    async listPrompts(): Promise<PromptInfo[]> {
+    async listPrompts(): Promise<AnthropicMcpPrompt[]> {
         const result = await this.promptsList({ cursor: '0' });
         return result.items;
     }
 
-    async getPrompt(name: string, args?: Record<string, unknown>): Promise<unknown> {
+    async getPrompt(name: string, args?: Record<string, unknown>): Promise<AnthropicMcpPromptGetResult> {
         return this.promptsGet(name, args);
     }
 

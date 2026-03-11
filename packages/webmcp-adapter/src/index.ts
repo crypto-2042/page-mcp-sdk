@@ -12,6 +12,6 @@ export type {
 
 export type {
   JsonSchema,
-  ToolAnnotations,
-  ToolDefinition,
-} from '@page-mcp/core';
+  AnthropicMcpToolAnnotations,
+  PageMcpToolDefinition,
+} from '@page-mcp/protocol';

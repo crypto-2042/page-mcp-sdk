@@ -5,6 +5,17 @@ import { PageMcpClient } from '../src/client.js';
 
 describe('Client standard MCP methods', () => {
   test('exposes MCP-style method names in addition to convenience aliases', async () => {
+    Object.defineProperty(globalThis, 'document', {
+      value: {
+        querySelectorAll: (selector: string) =>
+          selector === '.example'
+            ? [{ textContent: 'ok', outerHTML: '<div class="example">ok</div>', children: [] }]
+            : [],
+      },
+      configurable: true,
+      writable: true,
+    });
+
     const bus = new EventBus();
     const host = new PageMcpHost({ name: 'test', version: '1.0.0', bus });
 
@@ -15,10 +26,10 @@ describe('Client standard MCP methods', () => {
     });
 
     host.registerResource({
-      uri: 'page://example',
+      uri: 'page://selector/.example',
       name: 'Example Resource',
       description: 'Example',
-      handler: async () => ({ contents: [{ uri: 'page://example', mimeType: 'text/plain', text: 'ok' }] }),
+      mimeType: 'text/plain',
     });
 
     host.registerPrompt({
@@ -48,11 +59,11 @@ describe('Client standard MCP methods', () => {
     expect(toolCall).toEqual({ content: { hello: 'world' } });
 
     const resources = await (client as any).resourcesList({ cursor: '0', limit: 10 });
-    expect(resources.items[0].uri).toBe('page://example');
+    expect(resources.items[0].uri).toBe('page://selector/.example');
 
-    const resource = await (client as any).resourcesRead('page://example');
+    const resource = await (client as any).resourcesRead('page://selector/.example');
     expect(resource).toEqual({
-      contents: [{ uri: 'page://example', mimeType: 'text/plain', text: 'ok' }],
+      contents: [{ uri: 'page://selector/.example', mimeType: 'text/plain', text: 'ok' }],
     });
 
     const prompts = await (client as any).promptsList({ cursor: '0', limit: 10 });
