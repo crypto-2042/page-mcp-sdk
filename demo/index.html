@@ -1095,33 +1095,6 @@
     registerPromptShortcut('deal-finder', 'Find products on sale');
     registerPromptShortcut('cart-summary', 'Get a summary of the current shopping cart');
 
-    // ---- PROMPTS (AI Quick Actions) ----
-    const promptTextMap = {
-      'recommend-products': 'Based on the available products, recommend the top 3 best-value products and explain why they are worth buying.',
-      'compare-all': 'Compare all available products in a table format, listing name, price, stock status, and a brief pros/cons for each.',
-      'deal-finder': 'Find all products that are currently on sale (have a discounted price) and tell me how much I can save on each one.',
-      'cart-summary': 'Check my current shopping cart and give me a summary. If it is empty, suggest some products I might like.',
-      'gift-ideas': 'I am looking for a gift for a tech enthusiast. Can you recommend some cool gadgets from the catalog under $300?',
-      'tech-support': 'I need some help choosing the right product. Could you ask me a few questions to narrow down what I need?',
-    };
-
-    function registerPromptShortcut(name, description) {
-      host.registerPrompt({
-        name,
-        description,
-        handler: async () => ({
-          messages: [{ role: 'user', content: { type: 'text', text: promptTextMap[name] } }],
-        }),
-      });
-    }
-
-    registerPromptShortcut('recommend-products', 'Ask AI to recommend popular products');
-    registerPromptShortcut('compare-all', 'Ask AI to compare products');
-    registerPromptShortcut('deal-finder', 'Find products on sale');
-    registerPromptShortcut('cart-summary', 'Get a summary of the current shopping cart');
-    registerPromptShortcut('gift-ideas', 'Recommend gift ideas');
-    registerPromptShortcut('tech-support', 'Get help with a product');
-
     host.start();
 
     // Client
